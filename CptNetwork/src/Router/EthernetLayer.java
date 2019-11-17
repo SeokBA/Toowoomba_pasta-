@@ -1,10 +1,14 @@
+package Router;
+
 import java.util.ArrayList;
 
 public class EthernetLayer implements BaseLayer{
-	public int nUpperLayerCount=0;
-	public String pLayerName=null;
-	public BaseLayer p_UnderLayer=null;
-	public ArrayList<BaseLayer> p_aUpperLayer=new ArrayList<>();
+	public int nUnderLayerCount = 0;
+	public int nUpperLayerCount = 0;
+	public String pLayerName = null;
+	public BaseLayer p_UnderLayer = null;
+	public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
+	public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
 
 	private class _ETHERNET_ADDR{
 		private byte[] addr = new byte[6];
@@ -32,9 +36,9 @@ public class EthernetLayer implements BaseLayer{
 
 	_ETHERNET_Frame efHeader = new _ETHERNET_Frame();
 
-	public void setDstBroadCase(){
+	public void setDstBroadCast(){
 		for(int i=0; i<6; i++){
-			efHeader.enet_dstaddr.addr[i]=-1; // 0xFF
+			efHeader.enet_dstaddr.addr[i]=(byte)0xFF; // 0xFF
 		}
 	}
 
@@ -70,30 +74,36 @@ public class EthernetLayer implements BaseLayer{
 		}
 	}
 
+	public void setSrcAddress(byte[] addr){
+		for(int i=0; i<addr.length; i++){
+			efHeader.enet_srcaddr.addr[i]=addr[i];
+		}
+	}
+
 	public boolean Send(byte[] input, int length, int isArp) {
 		byte[] c=ObjToByte(efHeader, input, length, isArp, null);
-		this.GetUnderLayer().Send(c,length+14);
+		this.GetUnderLayer(0).Send(c,length+14);
 		return true;
 	}
 
 	public boolean Send(byte[] input, int length, int isArp, byte[] dstAddr) { // opcode 2일때
 		byte[] c=ObjToByte(efHeader, input, length, isArp, dstAddr);
-		this.GetUnderLayer().Send(c,length+14);
+		this.GetUnderLayer(0).Send(c,length+14);
 		return true;
 	}
 
 	public void setType(byte[] type){
-        efHeader.enet_type[0]=type[1];
-        efHeader.enet_type[1]=type[2];
-    }
+		efHeader.enet_type[0]=type[0];
+		efHeader.enet_type[1]=type[1];
+	}
 
 	public byte[] ObjToByte(_ETHERNET_Frame Header, byte[] input, int length, int isArp, byte[] dstAddr) {
 		byte[] buf = new byte[length + 14];
 
 		if(isArp>0) { // ARPLayer에서 내려옴
-			setType(hexToByte2(8086));
+			setType(hexToByte2(806));
 			if(isArp==1){
-				setDstBroadCase();
+				setDstBroadCast();
 			} else if(isArp==2){
 				setDstAddress(dstAddr);
 			}
@@ -106,8 +116,8 @@ public class EthernetLayer implements BaseLayer{
 		for(int i=6; i<12; i++) // Sender
 			buf[i] = Header.enet_srcaddr.addr[i-6];
 
-        buf[12] = Header.enet_type[0];
-        buf[13] = Header.enet_type[1];
+		buf[12] = Header.enet_type[0];
+		buf[13] = Header.enet_type[1];
 		for (int i = 0; i < input.length; i++)
 			buf[14 + i] = input[i];
 		return buf;
@@ -132,15 +142,18 @@ public class EthernetLayer implements BaseLayer{
 	}
 
 	public synchronized boolean Receive(byte[] input) {
-		if(IsItMyPacket(input)) // 자기껀 버림
+		if(IsItMyPacket(input)){
+			System.out.println("here?");
 			return false;
+			// 자기껀 버림
+		}
 
 		byte[] data;
-
+		System.out.println("here?2");
 		// broadcast & 올바른 주소 체크
 		boolean isBroad=false;
 		for(int i=0; i<6; i++){
-			if(input[i]==(byte)0xFF&&input[12]==(byte)9){
+			if(input[i]==(byte)0xFF){
 				isBroad=true;
 			}
 			else{
@@ -155,7 +168,7 @@ public class EthernetLayer implements BaseLayer{
 				}
 			}
 		}
-
+		System.out.println("here?3");
 		data = RemoveCappHeader(input, input.length);
 //
 		boolean isArp=true;
@@ -163,19 +176,19 @@ public class EthernetLayer implements BaseLayer{
 		type[0]=input[12];
 		type[1]=input[13];
 
-		byte[] arpPacket=hexToByte2(8086);
+		byte[] arpPacket=hexToByte2(806);
 		for(int i=0; i<arpPacket.length; i++){
 			if(type[i]!=arpPacket[i]){
 				isArp=false;
 				break;
 			}
 		}
-
+		System.out.println("here4");
 		// todo : 레이어 연결 확인하고 수정 필요
 		if(isArp) // arp
-			this.GetUpperLayer(0).Receive(data);
-		else // message
 			this.GetUpperLayer(1).Receive(data);
+		else // message
+			this.GetUpperLayer(0).Receive(data);
 		return true;
 	}
 
@@ -187,8 +200,8 @@ public class EthernetLayer implements BaseLayer{
 
 	byte[] intToByte2(int value) {
 		byte[] temp = new byte[2];
-		temp[1] = (byte) (value >> 8);
-		temp[0] = (byte) value;
+		temp[0] = (byte) (value >> 8);
+		temp[1] = (byte) value;
 		return temp;
 	}
 
@@ -212,10 +225,10 @@ public class EthernetLayer implements BaseLayer{
 	}
 
 	@Override
-	public BaseLayer GetUnderLayer() {
-		if (p_UnderLayer == null)
+	public BaseLayer GetUnderLayer(int nindex) {
+		if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
 			return null;
-		return p_UnderLayer;
+		return p_aUnderLayer.get(nindex);
 	}
 
 	@Override
@@ -229,7 +242,7 @@ public class EthernetLayer implements BaseLayer{
 	public void SetUnderLayer(BaseLayer pUnderLayer) {
 		if (pUnderLayer == null)
 			return;
-		this.p_UnderLayer = pUnderLayer;
+		this.p_aUnderLayer.add(nUnderLayerCount++, pUnderLayer);
 	}
 
 	@Override

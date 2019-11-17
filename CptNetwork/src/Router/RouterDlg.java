@@ -1,10 +1,12 @@
-//import org.jnetpcap.PcapAddr;
+package Router;//import org.jnetpcap.PcapAddr;
 //import org.jnetpcap.PcapIf;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,10 +14,15 @@ import javax.swing.border.TitledBorder;
 
 public class RouterDlg extends JFrame implements BaseLayer {
     public int nUpperLayerCount = 0;
+    public int nUnderLayerCount = 0;
     public String pLayerName = null;
     public BaseLayer p_UnderLayer = null;
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
+    public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
     BaseLayer UnderLayer; //
+
+    Map<String, ARPCacheRecord> arpCacheTable;
+    Map<String, ProxyARPRecord> proxyArpTable;
 
     private static LayerManager m_LayerMgr = new LayerManager();
 
@@ -49,13 +56,19 @@ public class RouterDlg extends JFrame implements BaseLayer {
     PopupRoutingAdderDlg popupRoutingAdderDlg;
 
     public static void main(String[] args) {
-        //m_LayerMgr.AddLayer(new NILayer("NI"));
-        //m_LayerMgr.AddLayer(new EthernetLayer("EtherNet"));
-        //m_LayerMgr.AddLayer(new IPLayer("IP"));
-        //m_LayerMgr.AddLayer(new TCPLayer("TCP"));
-        //m_LayerMgr.AddLayer(new ChatAppLayer("Chat"));
-        //m_LayerMgr.AddLayer(new ARPLayer("ARP"));
-        //m_LayerMgr.ConnectLayers(" NI ( *EtherNet ( +IP ( *TCP ( *Chat ( *GUI ) ) -ARP( *EtherNet ) ) ) ) ");
+//        m_LayerMgr.AddLayer(new Router.NILayer("NI_1"));
+//        m_LayerMgr.AddLayer(new Router.EthernetLayer("EtherNet_1"));
+//        m_LayerMgr.AddLayer(new Router.ARPLayer("ARP_1"));
+//        m_LayerMgr.AddLayer(new Router.IPLayer("IP_1"));
+//        m_LayerMgr.AddLayer(new Router.NILayer("NI_2"));
+//        m_LayerMgr.AddLayer(new Router.EthernetLayer("EtherNet_2"));
+//        m_LayerMgr.AddLayer(new Router.ARPLayer("ARP_2"));
+//        m_LayerMgr.AddLayer(new Router.IPLayer("IP_2"));
+//
+//        m_LayerMgr.ConnectLayers(" NI_1 ( *EtherNet_1 ( *IP_1 ( -ARP_1 )  -ARP_1 ) ) ");
+//        m_LayerMgr.ConnectLayers(" NI_2 ( *EtherNet_2 ( *IP_2 ( -ARP_2 )  -ARP_2 ) ) ");
+//        m_LayerMgr.ConnectLayers(" GUI ( *IP_1 ( *IP_2 ) *IP_2 )");
+
         m_LayerMgr.AddLayer(new RouterDlg("GUI")); // gui test
     }
 
@@ -337,23 +350,84 @@ public class RouterDlg extends JFrame implements BaseLayer {
             }
         }
     }
+
+    public void updateProxyArpEntry(){
+        arpCacheTable = ARPCacheTable.getInstance().getCacheTable();
+        proxyModel.clear();
+        proxyArpTable.forEach((k,v) -> proxyModel.addElement(k+"  "+v.hostIpAddr+"  "+v.routerMacAddr+""));
+    }
+
+    public String hwAddrByte2String(byte[] addr){
+        StringBuilder sb = new StringBuilder();
+        int temp;
+        for (int j = 0; j < addr.length; j++) {
+            if (sb.length() != 0)
+                sb.append('-');
+            if (addr[j] >= 0 && addr[j] < 16)
+                sb.append('0');
+            if (addr[j] < 0)
+                temp = addr[j] + 256;
+            else
+                temp = addr[j];
+            String hex = Integer.toHexString(temp).toUpperCase();
+            sb.append(hex);
+        }
+        return sb.toString();
+    }
+
+    public String ipAddrByte2String(byte[] addr){
+        StringBuilder sb = new StringBuilder();
+        int temp;
+        for (int j = 0; j < addr.length; j++) {
+            if (sb.length() != 0)
+                sb.append('.');
+            if (addr[j] < 0)
+                temp = addr[j] + 256;
+            else
+                temp = addr[j];
+//            String hex = Integer.toHexString(temp).toUpperCase();
+            sb.append(temp);
+        }
+        return sb.toString();
+    }
+
     public boolean Receive(byte[] input) {
         String s;
         s = new String(input);
         return true;
     }
 
+    private String toUTF8(String kor)
+            throws UnsupportedEncodingException {
+        return new String(kor.getBytes("MS949"), "UTF-8");
+    }
+
+    private String tableData2String(){
+        StringBuilder sb=new StringBuilder();
+        arpCacheTable.forEach((k,v) -> sb.append(k+"\t"+v.hardwareAddr+"\t"+v.status+"\n"));
+        return sb.toString();
+    }
+
+    public void updateCacheTable(){
+        ARPModel.clear();
+        arpCacheTable.forEach((k,v) -> ARPModel.addElement(k+"  "+v.hardwareAddr+"  "+v.status+""));
+    }
+
+    // IP 충돌시 메세지 뜨게함
+    public void IPCrash(){
+        String msg = "IP주소 충돌이 발생하였습니다.";
+        JOptionPane.showMessageDialog(null,msg);
+    }
+
     @Override
     public void SetUnderLayer(BaseLayer pUnderLayer) {
-        // TODO Auto-generated method stub
         if (pUnderLayer == null)
             return;
-        this.p_UnderLayer = pUnderLayer;
+        this.p_aUnderLayer.add(nUnderLayerCount++, pUnderLayer);
     }
 
     @Override
     public void SetUpperLayer(BaseLayer pUpperLayer) {
-        // TODO Auto-generated method stub
         if (pUpperLayer == null)
             return;
         this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);
@@ -362,21 +436,18 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
     @Override
     public String GetLayerName() {
-        // TODO Auto-generated method stub
         return pLayerName;
     }
 
     @Override
-    public BaseLayer GetUnderLayer() {
-        // TODO Auto-generated method stub
-        if (p_UnderLayer == null)
+    public BaseLayer GetUnderLayer(int nindex) {
+        if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
             return null;
-        return p_UnderLayer;
+        return p_aUnderLayer.get(nindex);
     }
 
     @Override
     public BaseLayer GetUpperLayer(int nindex) {
-        // TODO Auto-generated method stub
         if (nindex < 0 || nindex > nUpperLayerCount || nUpperLayerCount < 0)
             return null;
         return p_aUpperLayer.get(nindex);
@@ -386,5 +457,33 @@ public class RouterDlg extends JFrame implements BaseLayer {
     public void SetUpperUnderLayer(BaseLayer pUULayer) {
         this.SetUpperLayer(pUULayer);
         pUULayer.SetUnderLayer(this);
+    }
+
+    private byte[] IpStringtoByte(String address){
+        String[] Stringarray = address.split("\\.");
+        byte[] intarray = new byte[4];
+        for(int i=0 ; i<intarray.length; i++) {
+            intarray[i] = (byte)Integer.parseInt(Stringarray[i]);
+        }
+        return intarray;
+    }
+
+    private byte[]  StringHWaddrToByte(String address){
+        String[] hexarray = address.split(":");
+        StringBuilder hexstring = new StringBuilder();
+        for(int i=0 ; i<hexarray.length; i++) {
+            hexstring.append(hexarray[i]);
+        }
+        String hexString = hexstring.toString();
+        return hexStringToByteArray(hexString);
+    }
+
+    public byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
     }
 }

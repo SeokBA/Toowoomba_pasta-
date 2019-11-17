@@ -1,10 +1,14 @@
+package Router;
+
 import java.util.ArrayList;
 
 public class IPLayer implements BaseLayer{
-    public int nUpperLayerCount=0;
-    public String pLayerName=null;
-    public BaseLayer p_UnderLayer=null;
-    public ArrayList<BaseLayer> p_aUpperLayer=new ArrayList<>();
+    public int nUnderLayerCount = 0;
+    public int nUpperLayerCount = 0;
+    public String pLayerName = null;
+    public BaseLayer p_UnderLayer = null;
+    public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
+    public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
 
     public IPLayer(String pName) {
         pLayerName = pName;
@@ -50,32 +54,20 @@ public class IPLayer implements BaseLayer{
 
     _IP_HEADER ipHeader = new _IP_HEADER();
 
-    public void setDstAddress(String address) {
-        address=address.trim(); // 혹시나 붙을 공백 제거
-        String[] sp=address.split(".");
-        for(int i=0; i<sp.length; i++){
-            byte toByte;
-            int toInt = Integer.parseInt(sp[i]);
-            if(toInt>127)
-                toByte=(byte)(toInt-256);
-            else
-                toByte=(byte)toInt;
-            ipHeader.ipDst.addr[i]=toByte;
+    public void setDstAddress(byte[] addr){
+        for(int i=0; i<addr.length; i++){
+            ipHeader.ipDst.addr[i]=addr[i];
         }
     }
 
-    public void setSrcAddress(String address) {
-        address=address.trim(); // 혹시나 붙을 공백 제거
-        String[] sp=address.split(".");
-        for(int i=0; i<sp.length; i++){
-            byte toByte;
-            int toInt = Integer.parseInt(sp[i]);
-            if(toInt>127)
-                toByte=(byte)(toInt-256);
-            else
-                toByte=(byte)toInt;
-            ipHeader.ipSrc.addr[i]=toByte;
+    public void setSrcAddress(byte[] addr){
+        for(int i=0; i<addr.length; i++){
+            ipHeader.ipSrc.addr[i]=addr[i];
         }
+    }
+
+    public byte[] getSrcAddress(){
+        return ipHeader.ipSrc.addr;
     }
 
     public boolean IsItMyPacket(byte[] input) {
@@ -87,8 +79,40 @@ public class IPLayer implements BaseLayer{
     }
 
     public boolean Send(byte[] input, int length) {
+        byte[] extractData=new byte[length-28];
+        for(int i=0; i<extractData.length; i++){
+            extractData[i]=input[i+28];
+        }
+
+        String extractDataStr=new String(extractData);
+        String[] extractDataStrSplit=extractDataStr.split("\\.|:");
+        // Send할 데이터가 IPv4의 형식인지 검사
+        if(extractDataStrSplit.length==4){
+            byte[] dstIPByte=new byte[4];
+            try{
+                for(int i=0; i<extractDataStrSplit.length; i++){
+                    int part=Integer.parseInt(extractDataStrSplit[i]);
+                    if(part>127){
+                        dstIPByte[i]=(byte)(part-256);
+                    } else {
+                        dstIPByte[i]=(byte)part;
+                    }
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+            setDstAddress(dstIPByte);
+
+            // 입력받은 값이 mac형식일때, 즉 gARP 사용할 때!
+        } else if(extractDataStrSplit.length==6){
+            // gArp보냅니다~~
+            // ARPDlg에서 setDstAddress진행함
+        }
+        // srcAddress는 GUI에서 세팅
         byte[] c=ObjToByte(ipHeader, input, length);
-        this.GetUnderLayer().Send(c,length+19);
+        // 옵코드를 1로 보냄
+        ((ARPLayer)this.GetUnderLayer(1)).Send(c,length+19,(byte)1);
+
         return true;
     }
 
@@ -159,10 +183,10 @@ public class IPLayer implements BaseLayer{
     }
 
     @Override
-    public BaseLayer GetUnderLayer() {
-        if (p_UnderLayer == null)
+    public BaseLayer GetUnderLayer(int nindex) {
+        if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
             return null;
-        return p_UnderLayer;
+        return p_aUnderLayer.get(nindex);
     }
 
     @Override
@@ -176,7 +200,7 @@ public class IPLayer implements BaseLayer{
     public void SetUnderLayer(BaseLayer pUnderLayer) {
         if (pUnderLayer == null)
             return;
-        this.p_UnderLayer = pUnderLayer;
+        this.p_aUnderLayer.add(nUnderLayerCount++, pUnderLayer);
     }
 
     @Override
