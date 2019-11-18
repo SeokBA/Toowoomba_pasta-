@@ -201,7 +201,7 @@ public class ARPLayer implements BaseLayer {
             setDstPTAddress(input); // IPLayer에서 내려와야함
             setDstHWAddress(null);
             byte[] c = ObjToByte(arpMessage, input, length);
-            ((EthernetLayer) this.GetUnderLayer(0)).Send(c, length + 28, 1);
+            ((EthernetLayer) this.GetUnderLayer(0)).Send(c, length + 28, 1, new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
 
             // Timer Seq
             System.out.println("Send Request");
