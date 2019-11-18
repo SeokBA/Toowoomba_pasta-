@@ -266,7 +266,6 @@ public class ARPLayer implements BaseLayer {
 
     // todo 하드웨어타입 프로토콜타입이런거도 다 확인해줘야함
     public synchronized boolean Receive(byte[] input) {
-        System.out.println("this1");
         // 자기가 보낸거면 뭐 할거 없으므로 걸러냄
         byte[] senderHWaddr = new byte[6];
         for (int i = 8; i < 14; i++)
@@ -287,11 +286,9 @@ public class ARPLayer implements BaseLayer {
                 return false;
         }
 
-        System.out.println("this2");
         arpCacheTable = ARPCacheTable.getInstance().getCacheTable();
 
         if (input[7] == 1) { // 상대방이 보낸 req받았을 때
-            System.out.println("this3");
             // 받아왔는데 자기가 아니고 테이블에 저장되있는 맥주소가 아니면 업데이트
             byte[] senderPTaddr = new byte[4];
             for (int i = 14; i < 18; i++)
@@ -307,9 +304,8 @@ public class ARPLayer implements BaseLayer {
                 return false;
             }
 
-
+            String senderHWaddrStr = tool.hwAddrByteToString(senderHWaddr, ':');
             if (arpCacheTable.get(senderPTaddrStr) == null) {
-                String senderHWaddrStr = tool.hwAddrByteToString(senderHWaddr, ':');
                 arpCacheTable.put(senderPTaddrStr, new ARPCacheRecord(senderHWaddrStr, "Complete"));
 
                 // Timer Seq
@@ -325,7 +321,6 @@ public class ARPLayer implements BaseLayer {
             // 만약 arp에서 처리했다고 해도 테이블에 들어갈 내용은 변화가 없으니 상관없음
             // 엥 뭐여 그럼 같은 동작하는거네
             else {
-                String senderHWaddrStr = tool.hwAddrByteToString(senderHWaddr, ':');
                 arpCacheTable.put(senderPTaddrStr, new ARPCacheRecord(senderHWaddrStr, "Complete"));
 
                 // Timer Seq
@@ -363,7 +358,6 @@ public class ARPLayer implements BaseLayer {
             byte[] data;
             data = RemoveCappHeader(input, input.length);
 
-
         } else if (input[7] == 2) { // reply도착했을 때
             returnFlag = true;
             String dstPTAddr = tool.ptAddrByteToString(getDstPTAddress());
@@ -373,15 +367,11 @@ public class ARPLayer implements BaseLayer {
             String srcHWAddrStr = tool.hwAddrByteToString(srcHWAddr, ':');
             arpCacheTable.put(dstPTAddr, new ARPCacheRecord(srcHWAddrStr, "Complete"));
 
-
             // Timer Seq
             keyInfoStoredQueue.add(dstPTAddr);
             System.out.println("Cache Table Remaining Time Checking Start");
             timer.schedule(checkCompleted, 10000);
-
-
             ((RouterDlg) GetUpperLayer(0)).updateCacheTable();
-
         }
         returnFlag = false;
         return true;
@@ -391,7 +381,6 @@ public class ARPLayer implements BaseLayer {
 
     public ARPLayer(String pName) {
         pLayerName = pName;
-
     }
 
     @Override

@@ -144,13 +144,11 @@ public class EthernetLayer implements BaseLayer{
 
 	public synchronized boolean Receive(byte[] input) {
 		if(IsItMyPacket(input)){
-			System.out.println("here?");
 			return false;
 			// 자기껀 버림
 		}
 
 		byte[] data;
-		System.out.println("here?2");
 		// broadcast & 올바른 주소 체크
 		boolean isBroad=false;
 		for(int i=0; i<6; i++){
@@ -169,7 +167,6 @@ public class EthernetLayer implements BaseLayer{
 				}
 			}
 		}
-		System.out.println("here?3");
 		data = RemoveCappHeader(input, input.length);
 //
 		boolean isArp=true;
@@ -184,7 +181,6 @@ public class EthernetLayer implements BaseLayer{
 				break;
 			}
 		}
-		System.out.println("here4");
 		// todo : 레이어 연결 확인하고 수정 필요
 		if(isArp) // arp
 			this.GetUpperLayer(1).Receive(data);
