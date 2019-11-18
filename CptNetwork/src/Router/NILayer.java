@@ -79,7 +79,6 @@ public class NILayer implements BaseLayer{
 			System.err.println(m_AdapterObject.getErr());
 			return false;
 		}
-		//System.out.println("send!!");
 		return true;
 	}
 	
@@ -140,7 +139,6 @@ class Receive_Thread implements Runnable {
 
     @Override
     public void run() {
-		//System.out.println("running!");
         while (true) {
         	PcapPacketHandler<String> jpacketHandler = new PcapPacketHandler<String>() {
 				@Override

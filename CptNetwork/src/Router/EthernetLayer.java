@@ -9,6 +9,7 @@ public class EthernetLayer implements BaseLayer{
 	public BaseLayer p_UnderLayer = null;
 	public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
 	public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
+	Tool tool;
 
 	private class _ETHERNET_ADDR{
 		private byte[] addr = new byte[6];
@@ -101,7 +102,7 @@ public class EthernetLayer implements BaseLayer{
 		byte[] buf = new byte[length + 14];
 
 		if(isArp>0) { // ARPLayer에서 내려옴
-			setType(hexToByte2(806));
+			setType(tool.hexToByte2(806));
 			if(isArp==1){
 				setDstBroadCast();
 			} else if(isArp==2){
@@ -109,7 +110,7 @@ public class EthernetLayer implements BaseLayer{
 			}
 		}
 		else // message
-			setType(hexToByte2(0));
+			setType(tool.hexToByte2(0));
 
 		for(int i=0; i<6; i++) // Receiver
 			buf[i] = Header.enet_dstaddr.addr[i];
@@ -176,7 +177,7 @@ public class EthernetLayer implements BaseLayer{
 		type[0]=input[12];
 		type[1]=input[13];
 
-		byte[] arpPacket=hexToByte2(806);
+		byte[] arpPacket= tool.hexToByte2(806);
 		for(int i=0; i<arpPacket.length; i++){
 			if(type[i]!=arpPacket[i]){
 				isArp=false;
@@ -192,31 +193,8 @@ public class EthernetLayer implements BaseLayer{
 		return true;
 	}
 
-	byte[] hexToByte2(int hexValue){
-		String hex="0x"+hexValue;
-		int toInt = Integer.decode(hex);
-		return intToByte2(toInt);
-	}
-
-	byte[] intToByte2(int value) {
-		byte[] temp = new byte[2];
-		temp[0] = (byte) (value >> 8);
-		temp[1] = (byte) value;
-		return temp;
-	}
-
-	byte[] intToByte4(int value) {
-		byte[] temp = new byte[4];
-		temp[0]|=(byte)((value&0xFF000000)>>24);
-		temp[1]|=(byte)((value&0xFF0000)>>16);
-		temp[2]|=(byte)((value&0xFF00)>>8);
-		temp[3]|=(byte)(value&0xFF);
-		return temp;
-	}
-
 	public EthernetLayer(String pName) {
 		pLayerName = pName;
-
 	}
 
 	@Override

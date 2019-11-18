@@ -110,7 +110,7 @@ public class LayerManager {
                 else if (pNode.token.equals(")"))
                     Pop();
                 else {
-                    char cMode = pNode.token.charAt(0); // *GUI이렇게오면 짤라서 GUI만 ㄱ ㄱ
+                    char cMode = pNode.token.charAt(0);
                     String pcName = pNode.token.substring(1, pNode.token.length());
 
                     pLayer = GetLayer(pcName);

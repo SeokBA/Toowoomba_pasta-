@@ -9,6 +9,7 @@ public class IPLayer implements BaseLayer{
     public BaseLayer p_UnderLayer = null;
     public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
+    Tool tool;
 
     public IPLayer(String pName) {
         pLayerName = pName;
@@ -159,22 +160,6 @@ public class IPLayer implements BaseLayer{
         data = RemoveCappHeader(input, input.length);
         this.GetUpperLayer(0).Receive(data);
         return true;
-    }
-
-    byte[] intToByte2(int value) {
-        byte[] temp = new byte[2];
-        temp[1] = (byte) (value >> 8);
-        temp[0] = (byte) value;
-        return temp;
-    }
-
-    byte[] intToByte4(int value) {
-        byte[] temp = new byte[4];
-        temp[0]|=(byte)((value&0xFF000000)>>24);
-        temp[1]|=(byte)((value&0xFF0000)>>16);
-        temp[2]|=(byte)((value&0xFF00)>>8);
-        temp[3]|=(byte)(value&0xFF);
-        return temp;
     }
 
     @Override

@@ -4,7 +4,6 @@ package Router;//import org.jnetpcap.PcapAddr;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -54,6 +53,8 @@ public class RouterDlg extends JFrame implements BaseLayer {
     JList proxyArea;
 
     PopupRoutingAdderDlg popupRoutingAdderDlg;
+
+    Tool tool;
 
     public static void main(String[] args) {
 //        m_LayerMgr.AddLayer(new Router.NILayer("NI_1"));
@@ -351,66 +352,21 @@ public class RouterDlg extends JFrame implements BaseLayer {
         }
     }
 
-    public void updateProxyArpEntry(){
-        arpCacheTable = ARPCacheTable.getInstance().getCacheTable();
-        proxyModel.clear();
-        proxyArpTable.forEach((k,v) -> proxyModel.addElement(k+"  "+v.hostIpAddr+"  "+v.routerMacAddr+""));
-    }
-
-    public String hwAddrByte2String(byte[] addr){
-        StringBuilder sb = new StringBuilder();
-        int temp;
-        for (int j = 0; j < addr.length; j++) {
-            if (sb.length() != 0)
-                sb.append('-');
-            if (addr[j] >= 0 && addr[j] < 16)
-                sb.append('0');
-            if (addr[j] < 0)
-                temp = addr[j] + 256;
-            else
-                temp = addr[j];
-            String hex = Integer.toHexString(temp).toUpperCase();
-            sb.append(hex);
-        }
-        return sb.toString();
-    }
-
-    public String ipAddrByte2String(byte[] addr){
-        StringBuilder sb = new StringBuilder();
-        int temp;
-        for (int j = 0; j < addr.length; j++) {
-            if (sb.length() != 0)
-                sb.append('.');
-            if (addr[j] < 0)
-                temp = addr[j] + 256;
-            else
-                temp = addr[j];
-//            String hex = Integer.toHexString(temp).toUpperCase();
-            sb.append(temp);
-        }
-        return sb.toString();
-    }
-
     public boolean Receive(byte[] input) {
         String s;
         s = new String(input);
         return true;
     }
 
-    private String toUTF8(String kor)
-            throws UnsupportedEncodingException {
-        return new String(kor.getBytes("MS949"), "UTF-8");
-    }
-
-    private String tableData2String(){
-        StringBuilder sb=new StringBuilder();
-        arpCacheTable.forEach((k,v) -> sb.append(k+"\t"+v.hardwareAddr+"\t"+v.status+"\n"));
-        return sb.toString();
-    }
-
     public void updateCacheTable(){
         ARPModel.clear();
         arpCacheTable.forEach((k,v) -> ARPModel.addElement(k+"  "+v.hardwareAddr+"  "+v.status+""));
+    }
+
+    public void updateProxyArpEntry(){
+        arpCacheTable = ARPCacheTable.getInstance().getCacheTable();
+        proxyModel.clear();
+        proxyArpTable.forEach((k,v) -> proxyModel.addElement(k+"  "+v.hostIpAddr+"  "+v.routerMacAddr+""));
     }
 
     // IP 충돌시 메세지 뜨게함
@@ -457,33 +413,5 @@ public class RouterDlg extends JFrame implements BaseLayer {
     public void SetUpperUnderLayer(BaseLayer pUULayer) {
         this.SetUpperLayer(pUULayer);
         pUULayer.SetUnderLayer(this);
-    }
-
-    private byte[] IpStringtoByte(String address){
-        String[] Stringarray = address.split("\\.");
-        byte[] intarray = new byte[4];
-        for(int i=0 ; i<intarray.length; i++) {
-            intarray[i] = (byte)Integer.parseInt(Stringarray[i]);
-        }
-        return intarray;
-    }
-
-    private byte[]  StringHWaddrToByte(String address){
-        String[] hexarray = address.split(":");
-        StringBuilder hexstring = new StringBuilder();
-        for(int i=0 ; i<hexarray.length; i++) {
-            hexstring.append(hexarray[i]);
-        }
-        String hexString = hexstring.toString();
-        return hexStringToByteArray(hexString);
-    }
-
-    public byte[] hexStringToByteArray(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i+1), 16));
-        }
-        return data;
     }
 }

@@ -14,6 +14,7 @@ public class ARPLayer implements BaseLayer {
     public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
     DefaultListModel proxyModel;
+    Tool tool;
 
     Timer timer = new Timer();
     boolean returnFlag = false;
@@ -28,7 +29,7 @@ public class ARPLayer implements BaseLayer {
             } else {
                 System.out.println("Failed");
                 byte[] tableAddr = getDstPTAddress();
-                String tableKey = bytePTAddrToString(tableAddr);
+                String tableKey = tool.ptAddrByteToString(tableAddr);
                 if (arpCacheTable.isEmpty() == false) {
                     arpCacheTable.remove(tableKey);
                     ((RouterDlg) GetUpperLayer(0)).updateCacheTable();
@@ -92,7 +93,7 @@ public class ARPLayer implements BaseLayer {
             this.hardwareType[0] = 0; // default
             this.hardwareType[1] = 1; // 이 부분만 사용
             this.protocolType = new byte[2];
-            byte[] hexToByte = hexToByte2(800);
+            byte[] hexToByte = tool.hexToByte2(800);
             this.protocolType[0] = hexToByte[0];
             this.protocolType[1] = hexToByte[1];
             this.lengOfHardwareAddr = 6; // default
@@ -219,7 +220,7 @@ public class ARPLayer implements BaseLayer {
 
     public boolean Send(byte[] input, int length, byte opcode, String addr) {
         // reply
-        byte[] hostMacAddr = string2HWaddr(addr);
+        byte[] hostMacAddr = tool.hwAddrStringToByte(addr);
         for (int i = 18; i < 24; i++)
             input[i] = hostMacAddr[i - 18];
         input = swapping(input);
@@ -280,7 +281,7 @@ public class ARPLayer implements BaseLayer {
         if (isMyPacket)
             return false;
 
-        byte[] protocolType = hexToByte2(800);
+        byte[] protocolType = tool.hexToByte2(800);
         for (int i = 2; i < 4; i++) {
             if (input[i] != protocolType[i - 2])
                 return false;
@@ -296,7 +297,7 @@ public class ARPLayer implements BaseLayer {
             for (int i = 14; i < 18; i++)
                 senderPTaddr[i - 14] = input[i];
 
-            String senderPTaddrStr = bytePTAddrToString(senderPTaddr);
+            String senderPTaddrStr = tool.ptAddrByteToString(senderPTaddr);
 
             // sender의 PTaddr과 내 PTaddr이 같다면 gARP 송수신 과정에서 IP충돌이 발생한 것
             if (senderPTaddr == getSrcPTAddr()) {
@@ -308,7 +309,7 @@ public class ARPLayer implements BaseLayer {
 
 
             if (arpCacheTable.get(senderPTaddrStr) == null) {
-                String senderHWaddrStr = byteHWAddrToString(senderHWaddr);
+                String senderHWaddrStr = tool.hwAddrByteToString(senderHWaddr, ':');
                 arpCacheTable.put(senderPTaddrStr, new ARPCacheRecord(senderHWaddrStr, "Complete"));
 
                 // Timer Seq
@@ -324,7 +325,7 @@ public class ARPLayer implements BaseLayer {
             // 만약 arp에서 처리했다고 해도 테이블에 들어갈 내용은 변화가 없으니 상관없음
             // 엥 뭐여 그럼 같은 동작하는거네
             else {
-                String senderHWaddrStr = byteHWAddrToString(senderHWaddr);
+                String senderHWaddrStr = tool.hwAddrByteToString(senderHWaddr, ':');
                 arpCacheTable.put(senderPTaddrStr, new ARPCacheRecord(senderHWaddrStr, "Complete"));
 
                 // Timer Seq
@@ -342,7 +343,7 @@ public class ARPLayer implements BaseLayer {
             for (int i = 24; i < 28; i++)
                 targetPTaddr[i - 24] = input[i];
 
-            String targetPTaddrStr = bytePTAddrToString(targetPTaddr);
+            String targetPTaddrStr = tool.ptAddrByteToString(targetPTaddr);
             proxyArpEntry = ProxyARPTable.getInstance().getProxyArpEntry();
             if (ProxyARPTable.getInstance().isInProxyArpEntry(targetPTaddrStr)) {
                 Send(input, input.length, (byte) 2, ProxyARPTable.getInstance().getMacAddr(targetPTaddrStr));
@@ -365,12 +366,11 @@ public class ARPLayer implements BaseLayer {
 
         } else if (input[7] == 2) { // reply도착했을 때
             returnFlag = true;
-            System.out.println("this4");
-            String dstPTAddr = bytePTAddrToString(getDstPTAddress());
+            String dstPTAddr = tool.ptAddrByteToString(getDstPTAddress());
             byte[] srcHWAddr = new byte[6];
             for (int i = 8; i < 14; i++)
                 srcHWAddr[i - 8] = input[i];
-            String srcHWAddrStr = byteHWAddrToString(srcHWAddr);
+            String srcHWAddrStr = tool.hwAddrByteToString(srcHWAddr, ':');
             arpCacheTable.put(dstPTAddr, new ARPCacheRecord(srcHWAddrStr, "Complete"));
 
 
@@ -431,67 +431,5 @@ public class ARPLayer implements BaseLayer {
     public void SetUpperUnderLayer(BaseLayer pUULayer) {
         this.SetUpperLayer(pUULayer);
         pUULayer.SetUnderLayer(this);
-    }
-
-    byte[] hexToByte2(int hexValue) {
-        String hex = "0x" + hexValue;
-        int toInt = Integer.decode(hex);
-        return intToByte2(toInt);
-    }
-
-    byte[] intToByte2(int value) {
-        byte[] temp = new byte[2];
-        temp[1] = (byte) (value >> 8);
-        temp[0] = (byte) value;
-        return temp;
-    }
-
-    String byteHWAddrToString(byte[] addr) {
-        StringBuilder sb = new StringBuilder();
-        int temp = 0;
-        for (int j = 0; j < addr.length; j++) {
-            if (sb.length() != 0)
-                sb.append(':');
-            if (addr[j] >= 0 && addr[j] < 16)
-                sb.append('0');
-            if (addr[j] < 0)
-                temp = addr[j] + 256;
-            else
-                temp = addr[j];
-            String hex = Integer.toHexString(temp).toUpperCase();
-            sb.append(hex);
-        }
-
-        return sb.toString();
-    }
-
-    String bytePTAddrToString(byte[] addr) {
-        StringBuilder sb = new StringBuilder();
-        for (int j = 0; j < addr.length; j++) {
-            if (sb.length() != 0)
-                sb.append('.');
-            if (addr[j] < 0)
-                sb.append(addr[j] + 256);
-            else
-                sb.append(addr[j]);
-        }
-
-        return sb.toString();
-    }
-
-
-    public byte[] string2HWaddr(String address) {
-        byte addr[] = new byte[6];
-        String[] sp = address.split(":");
-        for (int i = 0; i < sp.length; i++) {
-            byte toByte;
-            int toInt = Integer.decode("0x" + sp[i]);
-            if (toInt > 127)
-                toByte = (byte) (toInt - 256);
-            else
-                toByte = (byte) toInt;
-            addr[i] = toByte;
-        }
-        return addr;
     }
 }
