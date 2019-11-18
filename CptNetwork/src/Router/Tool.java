@@ -30,7 +30,7 @@ public class Tool {
         return intToByte2(toInt);
     }
 
-    public String ipAddrByteToString(byte[] addr) {
+    public String ipAddrByteToString(byte[] addr) { // pt 포함
         StringBuilder sb = new StringBuilder();
         int temp;
         for (int j = 0; j < addr.length; j++) {
@@ -61,19 +61,6 @@ public class Tool {
             sb.append(hex);
         }
 
-        return sb.toString();
-    }
-
-    String ptAddrByteToString(byte[] addr) {
-        StringBuilder sb = new StringBuilder();
-        for (int j = 0; j < addr.length; j++) {
-            if (sb.length() != 0)
-                sb.append('.');
-            if (addr[j] < 0)
-                sb.append(addr[j] + 256);
-            else
-                sb.append(addr[j]);
-        }
         return sb.toString();
     }
 

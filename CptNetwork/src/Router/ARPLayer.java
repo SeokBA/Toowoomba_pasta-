@@ -33,7 +33,7 @@ public class ARPLayer implements BaseLayer {
             } else {
                 System.out.println("Failed");
                 byte[] tableAddr = getDstPTAddress();
-                String tableKey = tool.ptAddrByteToString(tableAddr);
+                String tableKey = tool.ipAddrByteToString(tableAddr);
                 if (arpCacheTable.isEmpty() == false) {
                     arpCacheTable.remove(tableKey);
                     ((RouterDlg) GetUpperLayer(0)).updateCacheTable();
@@ -298,7 +298,7 @@ public class ARPLayer implements BaseLayer {
             for (int i = 14; i < 18; i++)
                 senderPTaddr[i - 14] = input[i];
 
-            String senderPTaddrStr = tool.ptAddrByteToString(senderPTaddr);
+            String senderPTaddrStr = tool.ipAddrByteToString(senderPTaddr);
 
             // sender의 PTaddr과 내 PTaddr이 같다면 gARP 송수신 과정에서 IP충돌이 발생한 것
             if (senderPTaddr == getSrcPTAddr()) {
@@ -342,7 +342,7 @@ public class ARPLayer implements BaseLayer {
             for (int i = 24; i < 28; i++)
                 targetPTaddr[i - 24] = input[i];
 
-            String targetPTaddrStr = tool.ptAddrByteToString(targetPTaddr);
+            String targetPTaddrStr = tool.ipAddrByteToString(targetPTaddr);
             proxyArpEntry = ProxyARPTable.getInstance().getProxyArpEntry();
             if (ProxyARPTable.getInstance().isInProxyArpEntry(targetPTaddrStr)) {
                 Send(input, input.length, (byte) 2, ProxyARPTable.getInstance().getMacAddr(targetPTaddrStr));
@@ -364,7 +364,7 @@ public class ARPLayer implements BaseLayer {
 
         } else if (input[7] == 2) { // reply도착했을 때
             returnFlag = true;
-            String dstPTAddr = tool.ptAddrByteToString(getDstPTAddress());
+            String dstPTAddr = tool.ipAddrByteToString(getDstPTAddress());
             byte[] srcHWAddr = new byte[6];
             for (int i = 8; i < 14; i++)
                 srcHWAddr[i - 8] = input[i];
