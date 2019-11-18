@@ -52,7 +52,7 @@ public class EthernetLayer implements BaseLayer {
     public byte[] ObjToByte(_ETHERNET_Frame Header, byte[] input, int length, int isArp, byte[] dstAddr) {
         byte[] buf = new byte[length + 14];
 
-		SetEnetDstAddress(dstAddr);
+        SetEnetDstAddress(dstAddr);
         if (isArp > 0) // todo: 다시볼것
             setType(tool.hexToByte2(806));
         else
@@ -80,57 +80,57 @@ public class EthernetLayer implements BaseLayer {
         return true;
     }
 
-	public byte[] RemoveEthernetHeader(byte[] input, int length) {
-		byte[] cpyInput = new byte[length - 14];
-		System.arraycopy(input, 14, cpyInput, 0, length - 14);
-		input = cpyInput;
-		return input;
-	}
+    public byte[] RemoveEthernetHeader(byte[] input, int length) {
+        byte[] cpyInput = new byte[length - 14];
+        System.arraycopy(input, 14, cpyInput, 0, length - 14);
+        input = cpyInput;
+        return input;
+    }
 
-	public synchronized boolean Receive(byte[] input) {
-		byte[] data;
+    public synchronized boolean Receive(byte[] input) {
+        byte[] data;
 
-		if ((chkAddr(input) || (isBroadcast(input))) && !isMyPacket(input)) {
-			data = RemoveEthernetHeader(input, input.length);
-			if (input[12] == (byte) 0x03 && input[13] == (byte) 0x26) // arp
-				this.GetUpperLayer(1).Receive(data);
-			else // message
-				this.GetUpperLayer(0).Receive(data);
-		}
-		return false;
-	}
+        if ((chkAddr(input) || (isBroadcast(input))) && !isMyPacket(input)) {
+            data = RemoveEthernetHeader(input, input.length);
+            if (input[12] == (byte) 0x03 && input[13] == (byte) 0x26) // arp
+                this.GetUpperLayer(1).Receive(data);
+            else // message
+                this.GetUpperLayer(0).Receive(data);
+        }
+        return false;
+    }
 
-	private boolean isBroadcast(byte[] bytes) {
-		for (int i = 0; i < 6; i++)
-			if (bytes[i] != (byte) 0xff)
-				return false;
-		return true;
-	}
+    private boolean isBroadcast(byte[] bytes) {
+        for (int i = 0; i < 6; i++)
+            if (bytes[i] != (byte) 0xff)
+                return false;
+        return true;
+    }
 
-	private boolean isMyPacket(byte[] input) {
-		for (int i = 0; i < 6; i++)
-			if (m_sHeader.enet_srcaddr.addr[i] != input[6 + i])
-				return false;
-		return true;
-	}
+    private boolean isMyPacket(byte[] input) {
+        for (int i = 0; i < 6; i++)
+            if (m_sHeader.enet_srcaddr.addr[i] != input[6 + i])
+                return false;
+        return true;
+    }
 
-	private boolean chkAddr(byte[] input) {
-    	// todo: 내 네트워크 안에 포함된 기기들도 true로 반환, proxytable을 봐줘야 함
-		for(int i = 0; i< 6; i++)
-			if(m_sHeader.enet_srcaddr.addr[i] != input[i])
-				return false;
-		return true;
-	}
+    private boolean chkAddr(byte[] input) {
+        // todo: 내 네트워크 안에 포함된 기기들도 true로 반환, proxytable을 봐줘야 함
+        for (int i = 0; i < 6; i++)
+            if (m_sHeader.enet_srcaddr.addr[i] != input[i])
+                return false;
+        return true;
+    }
 
-	public void SetEnetSrcAddress(byte[] srcAddress) {
-		// TODO Auto-generated method stub
-		m_sHeader.enet_srcaddr.addr = srcAddress;
-	}
+    public void SetEnetSrcAddress(byte[] srcAddress) {
+        // TODO Auto-generated method stub
+        m_sHeader.enet_srcaddr.addr = srcAddress;
+    }
 
-	public void SetEnetDstAddress(byte[] dstAddress) {
-		// TODO Auto-generated method stub
-		m_sHeader.enet_dstaddr.addr = dstAddress;
-	}
+    public void SetEnetDstAddress(byte[] dstAddress) {
+        // TODO Auto-generated method stub
+        m_sHeader.enet_dstaddr.addr = dstAddress;
+    }
 
     @Override
     public String GetLayerName() {
