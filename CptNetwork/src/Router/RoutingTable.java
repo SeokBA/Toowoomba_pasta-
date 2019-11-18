@@ -25,12 +25,14 @@ class RoutingRecord {
     private String gateway;
     private int metric;
     private String flag;
+    private int interfaceNum;
 
-    public RoutingRecord(String dstAddr, String gateway, int metric, String flag) {
+    public RoutingRecord(String dstAddr, String gateway, int metric, String flag, int interfaceNum) {
         this.dstAddr = dstAddr;
         this.gateway = gateway;
         this.metric = metric;
         this.flag = setFlag(flag);
+        this.interfaceNum = interfaceNum;
     }
 
     public String setFlag(String flag){
