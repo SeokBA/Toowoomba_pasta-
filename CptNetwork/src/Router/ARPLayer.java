@@ -19,6 +19,10 @@ public class ARPLayer implements BaseLayer {
     Timer timer = new Timer();
     boolean returnFlag = false;
 
+    public ARPLayer(String pName) {
+        pLayerName = pName;
+    }
+
     TimerTask checkTime = new TimerTask() {
         @Override
         public void run() {
@@ -375,12 +379,6 @@ public class ARPLayer implements BaseLayer {
         }
         returnFlag = false;
         return true;
-    }
-
-
-
-    public ARPLayer(String pName) {
-        pLayerName = pName;
     }
 
     @Override

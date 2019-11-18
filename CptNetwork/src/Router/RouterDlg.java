@@ -57,20 +57,19 @@ public class RouterDlg extends JFrame implements BaseLayer {
     Tool tool;
 
     public static void main(String[] args) {
-//        m_LayerMgr.AddLayer(new Router.NILayer("NI_1"));
-//        m_LayerMgr.AddLayer(new Router.EthernetLayer("EtherNet_1"));
-//        m_LayerMgr.AddLayer(new Router.ARPLayer("ARP_1"));
-//        m_LayerMgr.AddLayer(new Router.IPLayer("IP_1"));
-//        m_LayerMgr.AddLayer(new Router.NILayer("NI_2"));
-//        m_LayerMgr.AddLayer(new Router.EthernetLayer("EtherNet_2"));
-//        m_LayerMgr.AddLayer(new Router.ARPLayer("ARP_2"));
-//        m_LayerMgr.AddLayer(new Router.IPLayer("IP_2"));
-//
-//        m_LayerMgr.ConnectLayers(" NI_1 ( *EtherNet_1 ( *IP_1 ( -ARP_1 )  -ARP_1 ) ) ");
-//        m_LayerMgr.ConnectLayers(" NI_2 ( *EtherNet_2 ( *IP_2 ( -ARP_2 )  -ARP_2 ) ) ");
-//        m_LayerMgr.ConnectLayers(" GUI ( *IP_1 ( *IP_2 ) *IP_2 )");
+        m_LayerMgr.AddLayer(new Router.NILayer("NI_1"));
+        m_LayerMgr.AddLayer(new Router.EthernetLayer("EtherNet_1"));
+        m_LayerMgr.AddLayer(new Router.ARPLayer("ARP_1"));
+        m_LayerMgr.AddLayer(new Router.IPLayer("IP_1"));
+        m_LayerMgr.AddLayer(new Router.NILayer("NI_2"));
+        m_LayerMgr.AddLayer(new Router.EthernetLayer("EtherNet_2"));
+        m_LayerMgr.AddLayer(new Router.ARPLayer("ARP_2"));
+        m_LayerMgr.AddLayer(new Router.IPLayer("IP_2"));
+        m_LayerMgr.AddLayer(new RouterDlg("GUI"));
 
-        m_LayerMgr.AddLayer(new RouterDlg("GUI")); // gui test
+        m_LayerMgr.ConnectLayers(" NI_1 ( *EtherNet_1 ( *IP_1 ( -ARP_1 )  -ARP_1 ) ) ");
+        m_LayerMgr.ConnectLayers(" NI_2 ( *EtherNet_2 ( *IP_2 ( -ARP_2 )  -ARP_2 ) ) ");
+        m_LayerMgr.ConnectLayers(" GUI ( *IP_1 ( *IP_2 ) *IP_2 )");
     }
 
     public RouterDlg(String pName) {
@@ -304,7 +303,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
             addInterfaceComboBox.setBounds(110, 130, 190, 24);
             addInterfaceComboBox.addActionListener(new setPopupListener());
             add(addInterfaceComboBox);
-            // updateInterface();
+            updateInterface();
         }
 
         public void updateInterface() {
@@ -333,7 +332,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
             if (e.getSource() == btnRoutingAdd) {
                 if (popupRoutingAdderDlg == null)
                     popupRoutingAdderDlg = new PopupRoutingAdderDlg((NILayer)m_LayerMgr.GetLayer("NI"));
-                // popupRoutingAdderDlg.updateInterface();
+                popupRoutingAdderDlg.updateInterface();
                 popupRoutingAdderDlg.setVisible(true);
                 RoutingModel.addElement("routing add");
             }

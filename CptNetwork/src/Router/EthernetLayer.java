@@ -37,9 +37,19 @@ public class EthernetLayer implements BaseLayer{
 
 	_ETHERNET_Frame efHeader = new _ETHERNET_Frame();
 
+	public EthernetLayer(String pName) {
+		pLayerName = pName;
+	}
+
 	public void setDstBroadCast(){
 		for(int i=0; i<6; i++){
 			efHeader.enet_dstaddr.addr[i]=(byte)0xFF; // 0xFF
+		}
+	}
+
+	public void setSrcAddress(byte[] addr){
+		for(int i=0; i<addr.length; i++){
+			efHeader.enet_srcaddr.addr[i]=addr[i];
 		}
 	}
 
@@ -72,12 +82,6 @@ public class EthernetLayer implements BaseLayer{
 			else
 				toByte=(byte)toInt;
 			efHeader.enet_srcaddr.addr[i]=toByte;
-		}
-	}
-
-	public void setSrcAddress(byte[] addr){
-		for(int i=0; i<addr.length; i++){
-			efHeader.enet_srcaddr.addr[i]=addr[i];
 		}
 	}
 
@@ -187,10 +191,6 @@ public class EthernetLayer implements BaseLayer{
 		else // message
 			this.GetUpperLayer(0).Receive(data);
 		return true;
-	}
-
-	public EthernetLayer(String pName) {
-		pLayerName = pName;
 	}
 
 	@Override
