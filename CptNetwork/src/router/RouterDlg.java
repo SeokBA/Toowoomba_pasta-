@@ -22,7 +22,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
     public int nUnderLayerCount = 0;
     public String pLayerName = null;
     public BaseLayer p_UnderLayer = null;
-    public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
+    public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
     public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
     BaseLayer UnderLayer;
 
