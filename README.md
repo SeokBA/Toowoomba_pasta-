@@ -17,5 +17,4 @@
       * 파일 인코딩 UTF-8 통일  
       * 기본 동작 테스트 완료
 ## - 2019.11.21
-  - 김석호 : interface_0, 1 select label과 Static Routine Table add 구현  
-  (Table add에서 정보는 받을 수 있으나 받은 정보를 Table GUI로 올리는 것은 미구현)
+  - 김석호 : interface_0, 1 select label popup 관련 기능들과 Static Routine Table add 기능 구현
