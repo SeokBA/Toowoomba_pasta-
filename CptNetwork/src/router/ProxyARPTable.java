@@ -21,6 +21,10 @@ public class ProxyARPTable {
         return proxyArpTable;
     }
 
+    public String[][] getStringArray(){
+        return null;
+    }
+
     public boolean isInProxyArpEntry(String hostIpAddr) {
         boolean state;
         for (Map.Entry<String, ProxyARPRecord> entry : proxyArpTable.entrySet()) {
@@ -48,5 +52,9 @@ class ProxyARPRecord {
     public ProxyARPRecord(String hostIpAddr, String routerMacAddr) {
         this.hostIpAddr = hostIpAddr;
         this.routerMacAddr = routerMacAddr;
+    }
+
+    public String[] getStringArray(){
+        return null;
     }
 }

@@ -17,6 +17,10 @@ public class ARPCacheTable {
     public Map<String, ARPCacheRecord> getTable(){
         return arpCacheTable;
     }
+
+    public String[][] getStringArray(){
+        return null;
+    }
 }
 
 class ARPCacheRecord{
@@ -30,5 +34,9 @@ class ARPCacheRecord{
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String[] getStringArray(){
+        return null;
     }
 }

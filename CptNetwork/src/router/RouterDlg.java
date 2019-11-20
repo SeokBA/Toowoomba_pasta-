@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
 
 public class RouterDlg extends JFrame implements BaseLayer {
     public int nUpperLayerCount = 0;
@@ -43,6 +44,14 @@ public class RouterDlg extends JFrame implements BaseLayer {
     JPanel ARPCacheDisplayPanel;
     JPanel ProxyARPDisplayPanel;
 
+    DefaultTableModel routineModel;
+    DefaultTableModel arpModel;
+    DefaultTableModel proxyModel;
+
+    JTable routingArea;
+    JTable ARPArea;
+    JTable proxyArea;
+
     JScrollPane scrollARP;
     JScrollPane scrollProxy;
     JScrollPane scrollRouting;
@@ -53,12 +62,6 @@ public class RouterDlg extends JFrame implements BaseLayer {
     JButton btnProxyAdd;
     JButton btnProxyDelete;
 
-    JTable routingArea;
-    JTable ARPArea;
-    JTable proxyArea;
-
-    PopupRoutingAdderDlg popupRoutingAdderDlg;
-
     JLabel lbInterface_0IP;
     JLabel lbInterface_1IP;
     JLabel lbInterface_0MAC;
@@ -66,6 +69,8 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
     setAddressListener setAddressListener = new setAddressListener();
     setMouseListener setMouseListener = new setMouseListener();
+
+    PopupRoutingAdderDlg popupRoutingAdderDlg;
 
     Tools tools = new Tools();
 
@@ -126,16 +131,30 @@ public class RouterDlg extends JFrame implements BaseLayer {
         ProxyARPDisplayPanel.setLayout(null);
 
 
+        // Default Table Model
+        routineModel = new DefaultTableModel(routingTableStr, routingHeader);
+        arpModel = new DefaultTableModel(arpTableStr, arpHeader);
+        proxyModel = new DefaultTableModel(proxyTableStr, proxyHeader);
+
+
+        // Table
+        routingArea = new JTable(routineModel);
+
+        ARPArea = new JTable(arpModel);
+
+        proxyArea = new JTable(proxyModel);
+
+
         // Scroll panel
-        scrollRouting = new JScrollPane();
+        scrollRouting = new JScrollPane(routingArea);
         scrollRouting.setBounds(0, 0, 480, 300);
         StaticRoutingDisplayPanel.add(scrollRouting);
 
-        scrollARP = new JScrollPane();
+        scrollARP = new JScrollPane(ARPArea);
         scrollARP.setBounds(0, 0, 380, 125);
         ARPCacheDisplayPanel.add(scrollARP);
 
-        scrollProxy = new JScrollPane();
+        scrollProxy = new JScrollPane(proxyArea);
         scrollProxy.setBounds(0, 0, 380, 125);
         ProxyARPDisplayPanel.add(scrollProxy);
 
@@ -165,17 +184,6 @@ public class RouterDlg extends JFrame implements BaseLayer {
         btnProxyDelete.setBounds(218, 140, 120, 25);
         btnProxyDelete.addActionListener(setAddressListener);
         ProxyARPPanel.add(btnProxyDelete);
-
-
-        // List area
-        routingArea = new JTable(routingTableStr, routingHeader);
-        scrollRouting.setViewportView(routingArea);
-
-        ARPArea = new JTable(arpTableStr, arpHeader);
-        scrollARP.setViewportView(ARPArea);
-
-        proxyArea = new JTable(proxyTableStr, proxyHeader);
-        scrollProxy.setViewportView(proxyArea);
 
 
         // Label
@@ -509,15 +517,27 @@ public class RouterDlg extends JFrame implements BaseLayer {
     }
 
     public void updateRoutingTable() {
-        routingArea = new JTable(routingTableStr, routingHeader);
+        routingTableStr = routingTable.getStringArray();
+        while (routineModel.getRowCount() > 0)
+            routineModel.removeRow(0);
+        for (String[] i:routingTableStr)
+            routineModel.addRow(i);
     }
 
-    public void updateCacheTable() {
-
+    public void updateARPTable() {
+        arpTableStr = arpCacheTable.getStringArray();
+        while (arpModel.getRowCount() > 0)
+            arpModel.removeRow(0);
+        for (String[] i:arpTableStr)
+            arpModel.addRow(i);
     }
 
-    public void updateProxyArpEntry() {
-
+    public void updateProxyTable() {
+        proxyTableStr = proxyArpTable.getStringArray();
+        while (proxyModel.getRowCount() > 0)
+            proxyModel.removeRow(0);
+        for (String[] i:proxyTableStr)
+            proxyModel.addRow(i);
     }
 
     // IP 충돌시 메세지 뜨게함

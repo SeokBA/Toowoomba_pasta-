@@ -40,6 +40,7 @@ class RoutingRecord {
 
     public RoutingRecord(String dstAddr, String netmask, String gateway, String flag, int interfaceNum, int metric) {
         this.dstAddr = dstAddr;
+        this.netmask = netmask;
         this.gateway = gateway;
         this.metric = metric;
         this.flag = setFlag(flag);
