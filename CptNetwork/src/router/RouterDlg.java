@@ -1,15 +1,21 @@
 package router;
-//import org.jnetpcap.PcapIf;
+
+import org.jnetpcap.PcapIf;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.JTableHeader;
 
 public class RouterDlg extends JFrame implements BaseLayer {
     public int nUpperLayerCount = 0;
@@ -20,10 +26,18 @@ public class RouterDlg extends JFrame implements BaseLayer {
     public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
     BaseLayer UnderLayer; //
 
-    Map<String, ARPCacheRecord> arpCacheTable;
-    Map<String, ProxyARPRecord> proxyArpTable;
+    RoutingTable routingTable = new RoutingTable();
+    ARPCacheTable arpCacheTable = new ARPCacheTable();
+    ProxyARPTable proxyArpTable = new ProxyARPTable();
 
     private static LayerManager m_LayerMgr = new LayerManager();
+
+    String[] staticRoutingHeader = {"Destination", "NetMask", "Gateway", "Flag", "Interface", "Metric"};
+    String[] arpHeader = {"IP Address", "Ethernet Address", "Interface", "Flag"};
+    String[] proxyHeader = {"IP Address", "Ethernet Address", "Interface"};
+    String[][] staticRoutingTable = {};
+    String[][] arpTable = {};
+    String[][] proxyTable = {};
 
     Container contentPanel;
 
@@ -44,17 +58,21 @@ public class RouterDlg extends JFrame implements BaseLayer {
     JButton btnProxyAdd;
     JButton btnProxyDelete;
 
-    DefaultListModel RoutingModel;
-    DefaultListModel ARPModel;
-    DefaultListModel proxyModel;
-
-    JList staticRoutingArea;
-    JList ARPArea;
-    JList proxyArea;
+    JTable staticRoutingArea;
+    JTable ARPArea;
+    JTable proxyArea;
 
     PopupRoutingAdderDlg popupRoutingAdderDlg;
 
-    Tools tools;
+    JLabel lbLeftHandIP;
+    JLabel lbRightHandIP;
+    JLabel lbLeftHandMAC;
+    JLabel lbRightHandMAC;
+
+    setAddressListener setAddressListener = new setAddressListener();
+    setMouseListener setMouseListener = new setMouseListener();
+
+    Tools tools = new Tools();
 
     public static void main(String[] args) {
         m_LayerMgr.addLayer(new NILayer("NI"));
@@ -71,7 +89,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
         // main
         setTitle("TestRouting");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(250, 250, 780, 440);
+        setBounds(250, 250, 980, 460);
         contentPanel = new JPanel();
         ((JComponent) contentPanel).setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(contentPanel);
@@ -82,98 +100,255 @@ public class RouterDlg extends JFrame implements BaseLayer {
         StaticRoutingPanel = new JPanel();
         StaticRoutingPanel.setLayout(null);
         StaticRoutingPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Static Routing Table", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        StaticRoutingPanel.setBounds(20, 40, 360, 345);
+        StaticRoutingPanel.setBounds(20, 60, 500, 345);
         contentPanel.add(StaticRoutingPanel);
 
         ARPCachePanel = new JPanel();
         ARPCachePanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "ARP Cache Table", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        ARPCachePanel.setBounds(400, 40, 360, 170);
+        ARPCachePanel.setBounds(540, 60, 400, 170);
         contentPanel.add(ARPCachePanel);
         ARPCachePanel.setLayout(null);
 
         ProxyARPPanel = new JPanel();
         ProxyARPPanel.setLayout(null);
         ProxyARPPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Proxy ARP Table", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        ProxyARPPanel.setBounds(400, 215, 360, 170);
+        ProxyARPPanel.setBounds(540, 235, 400, 170);
         contentPanel.add(ProxyARPPanel);
 
         StaticRoutingDisplayPanel = new JPanel();
         StaticRoutingDisplayPanel.setLayout(null);
-        StaticRoutingDisplayPanel.setBounds(10, 15, 340, 300);
+        StaticRoutingDisplayPanel.setBounds(10, 15, 480, 300);
         StaticRoutingPanel.add(StaticRoutingDisplayPanel);
 
         ARPCacheDisplayPanel = new JPanel();
-        ARPCacheDisplayPanel.setBounds(10, 15, 340, 125);
+        ARPCacheDisplayPanel.setBounds(10, 15, 380, 125);
         ARPCachePanel.add(ARPCacheDisplayPanel);
         ARPCacheDisplayPanel.setLayout(null);
 
         ProxyARPDisplayPanel = new JPanel();
-        ProxyARPDisplayPanel.setBounds(10, 15, 340, 125);
+        ProxyARPDisplayPanel.setBounds(10, 15, 380, 125);
         ProxyARPPanel.add(ProxyARPDisplayPanel);
         ProxyARPDisplayPanel.setLayout(null);
 
 
         // Scroll panel
         scrollRouting = new JScrollPane();
-        scrollRouting.setBounds(0, 0, 340, 300);
+        scrollRouting.setBounds(0, 0, 480, 300);
         StaticRoutingDisplayPanel.add(scrollRouting);
 
         scrollARP = new JScrollPane();
-        scrollARP.setBounds(0, 0, 340, 125);
+        scrollARP.setBounds(0, 0, 380, 125);
         ARPCacheDisplayPanel.add(scrollARP);
 
         scrollProxy = new JScrollPane();
-        scrollProxy.setBounds(0, 0, 340, 125);
+        scrollProxy.setBounds(0, 0, 380, 125);
         ProxyARPDisplayPanel.add(scrollProxy);
 
 
         // Button
         btnRoutingAdd = new JButton("Add");
-        btnRoutingAdd.setBounds(34, 315, 120, 25);
-        btnRoutingAdd.addActionListener(new setAddressListener());
+        btnRoutingAdd.setBounds(104, 315, 120, 25);
+        btnRoutingAdd.addActionListener(setAddressListener);
         StaticRoutingPanel.add(btnRoutingAdd);
 
         btnRoutingDelete = new JButton("Delete");
-        btnRoutingDelete.setBounds(198, 315, 120, 25);
-        btnRoutingDelete.addActionListener(new setAddressListener());
+        btnRoutingDelete.setBounds(268, 315, 120, 25);
+        btnRoutingDelete.addActionListener(setAddressListener);
         StaticRoutingPanel.add(btnRoutingDelete);
 
         btnARPDelete = new JButton("Delete");
-        btnARPDelete.setBounds(120, 140, 120, 25);
-        btnARPDelete.addActionListener(new setAddressListener());
+        btnARPDelete.setBounds(140, 140, 120, 25);
+        btnARPDelete.addActionListener(setAddressListener);
         ARPCachePanel.add(btnARPDelete);
 
         btnProxyAdd = new JButton("Add");
-        btnProxyAdd.setBounds(34, 140, 120, 25);
-        btnProxyAdd.addActionListener(new setAddressListener());
+        btnProxyAdd.setBounds(54, 140, 120, 25);
+        btnProxyAdd.addActionListener(setAddressListener);
         ProxyARPPanel.add(btnProxyAdd);
 
         btnProxyDelete = new JButton("Delete");
-        btnProxyDelete.setBounds(198, 140, 120, 25);
-        btnProxyDelete.addActionListener(new setAddressListener());
+        btnProxyDelete.setBounds(218, 140, 120, 25);
+        btnProxyDelete.addActionListener(setAddressListener);
         ProxyARPPanel.add(btnProxyDelete);
 
 
-        // List Model
-        RoutingModel = new DefaultListModel();
-        ARPModel = new DefaultListModel();
-        proxyModel = new DefaultListModel();
-
-
         // List area
-        staticRoutingArea = new JList(RoutingModel);
+        staticRoutingArea = new JTable(staticRoutingTable, staticRoutingHeader);
         scrollRouting.setViewportView(staticRoutingArea);
 
-        ARPArea = new JList(ARPModel);
+        ARPArea = new JTable(arpTable, arpHeader);
         scrollARP.setViewportView(ARPArea);
 
-        proxyArea = new JList(proxyModel);
+        proxyArea = new JTable(proxyTable, proxyHeader);
         scrollProxy.setViewportView(proxyArea);
+
+
+        // Label
+        lbLeftHandIP = new JLabel("LeftHand IP      : ");
+        lbLeftHandIP.setBounds(20, 10, 260, 25);
+        lbLeftHandIP.addMouseListener(setMouseListener);
+        contentPanel.add(lbLeftHandIP);
+
+        lbLeftHandMAC = new JLabel("LeftHand MAC : ");
+        lbLeftHandMAC.setBounds(20, 30, 260, 25);
+        lbLeftHandMAC.addMouseListener(setMouseListener);
+        contentPanel.add(lbLeftHandMAC);
+
+        lbRightHandIP = new JLabel("RightHand IP      : ");
+        lbRightHandIP.setBounds(700, 10, 260, 25);
+        lbRightHandIP.addMouseListener(setMouseListener);
+        contentPanel.add(lbRightHandIP);
+
+        lbRightHandMAC = new JLabel("RightHand MAC : ");
+        lbRightHandMAC.setBounds(700, 30, 260, 25);
+        lbRightHandMAC.addMouseListener(setMouseListener);
+        contentPanel.add(lbRightHandMAC);
 
 
         setVisible(true);
     }
-    public class PopupRoutingAdderDlg extends JFrame{
+
+    class setAddressListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) { // routing add
+            if (e.getSource() == btnRoutingAdd) {
+                if (popupRoutingAdderDlg == null)
+                    popupRoutingAdderDlg = new PopupRoutingAdderDlg((NILayer) m_LayerMgr.getLayer("NI"));
+                popupRoutingAdderDlg.updateInterface();
+                popupRoutingAdderDlg.setVisible(true);
+            }
+            if (e.getSource() == btnRoutingDelete) { // routing delete
+
+            }
+            if (e.getSource() == btnARPDelete) { // arp delete
+
+            }
+            if (e.getSource() == btnProxyAdd) { // proxy add
+
+            }
+            if (e.getSource() == btnProxyDelete) { // proxy delete
+
+            }
+        }
+
+
+    }
+
+    class setMouseListener implements MouseListener {
+        PopupSelectNICDlg popupSelectNICDlg = new PopupSelectNICDlg((NILayer) m_LayerMgr.getLayer("NI"));
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (e.getSource() == lbLeftHandIP || e.getSource() == lbLeftHandMAC) {
+                popupSelectNICDlg.popup("Left NIC", false);
+            }
+
+            if (e.getSource() == lbRightHandIP || e.getSource() == lbRightHandMAC) {
+                popupSelectNICDlg.popup("Right NIC", true);
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+
+        }
+    }
+
+    public class PopupSelectNICDlg extends JFrame {
+        NILayer m_NILayer;
+
+        JButton btnOK;
+        JButton btnCancel;
+
+        JComboBox<String> addInterfaceComboBox;
+
+        setPopupListener setPopupListener = new setPopupListener();
+
+        boolean handChk;
+
+        public PopupSelectNICDlg(NILayer m_NILayer) {
+            this.m_NILayer = m_NILayer;
+
+            // main
+            setTitle("Select NIC");
+            setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+            setBounds(250, 250, 270, 140);
+            setLayout(null);
+
+            // Button
+            btnOK = new JButton("OK");
+            btnOK.setBounds(20, 60, 100, 27);
+            btnOK.addActionListener(setPopupListener);
+            add(btnOK);
+
+            btnCancel = new JButton("Cancel");
+            btnCancel.setBounds(140, 60, 100, 27);
+            btnCancel.addActionListener(setPopupListener);
+            add(btnCancel);
+
+            // ComboBox
+            addInterfaceComboBox = new JComboBox<>();
+            addInterfaceComboBox.setBounds(30, 20, 190, 24);
+            add(addInterfaceComboBox);
+        }
+
+        public void popup(String title, boolean handChk) {
+            setTitle(title);
+            this.handChk = handChk;
+            addInterfaceComboBox.removeAllItems();
+            for (int i = 0; i < m_NILayer.m_pAdapterList.size(); i++) {
+                addInterfaceComboBox.addItem(m_NILayer.m_pAdapterList.get(i).getDescription());
+            }
+            setVisible(true);
+        }
+
+        class setPopupListener implements ActionListener {
+            String ipAddressStr = "", macAddressStr = "";
+            int selected;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == btnOK) { // Pushed "OK" button
+                    selected = addInterfaceComboBox.getSelectedIndex();
+                    ipAddressStr = tools.ipAddrByteToString(m_NILayer.getIpAddress(selected));
+                    try {
+                        macAddressStr = tools.hwAddrByteToString(m_NILayer.getMacAddress(selected), ':');
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                    if (!handChk) {
+                        lbLeftHandIP.setText("LeftHand IP      : " + ipAddressStr);
+                        lbLeftHandMAC.setText("LeftHand MAC : " + macAddressStr);
+                    } else {
+                        lbRightHandIP.setText("LeftHand IP      : " + ipAddressStr);
+                        lbRightHandMAC.setText("LeftHand MAC : " + macAddressStr);
+                    }
+                    setVisible(false);
+                }
+
+                if (e.getSource() == btnCancel) { // Pushed "Cancel" button
+                    setVisible(false);
+                }
+            }
+        }
+    }
+
+    public class PopupRoutingAdderDlg extends JFrame {
         NILayer m_NILayer;
 
         JPanel addDestinationPanel;
@@ -199,13 +374,15 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
         JComboBox<String> addInterfaceComboBox;
 
+        setPopupListener setPopupListener = new setPopupListener();
+
         public PopupRoutingAdderDlg(NILayer m_NILayer) {
             this.m_NILayer = m_NILayer;
 
             // main
             setTitle("Routing Table Entry");
             setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-            setSize(320,220);
+            setSize(330, 250);
             setLayout(null);
 
 
@@ -229,12 +406,12 @@ public class RouterDlg extends JFrame implements BaseLayer {
             // Button
             btnOK = new JButton("OK");
             btnOK.setBounds(50, 165, 100, 27);
-            btnOK.addActionListener(new setPopupListener());
+            btnOK.addActionListener(setPopupListener);
             add(btnOK);
 
             btnCancel = new JButton("Cancel");
             btnCancel.setBounds(160, 165, 100, 27);
-            btnCancel.addActionListener(new setPopupListener());
+            btnCancel.addActionListener(setPopupListener);
             add(btnCancel);
 
 
@@ -279,27 +456,27 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
             // Checkbox
             chkUpFlag = new JCheckBox("UP");
-            chkUpFlag.setBounds(110, 100, 50, 24);
+            chkUpFlag.setBounds(110, 100, 44, 24);
             add(chkUpFlag);
 
             chkGatewayFlag = new JCheckBox("Gateway");
-            chkGatewayFlag.setBounds(150, 100, 200, 24);
+            chkGatewayFlag.setBounds(150, 100, 74, 24);
             add(chkGatewayFlag);
 
             chkHostFlag = new JCheckBox("Host");
-            chkHostFlag.setBounds(230, 100, 100, 24);
+            chkHostFlag.setBounds(220, 100, 74, 24);
             add(chkHostFlag);
 
 
             // ComboBox
             addInterfaceComboBox = new JComboBox<>();
             addInterfaceComboBox.setBounds(110, 130, 190, 24);
-            addInterfaceComboBox.addActionListener(new setPopupListener());
             add(addInterfaceComboBox);
             updateInterface();
         }
 
         public void updateInterface() {
+            addInterfaceComboBox.removeAllItems();
             for (int i = 0; i < m_NILayer.m_pAdapterList.size(); i++) {
                 addInterfaceComboBox.addItem(m_NILayer.m_pAdapterList.get(i).getDescription());
             }
@@ -319,52 +496,28 @@ public class RouterDlg extends JFrame implements BaseLayer {
         }
     }
 
-    class setAddressListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (e.getSource() == btnRoutingAdd) {
-                if (popupRoutingAdderDlg == null)
-                    popupRoutingAdderDlg = new PopupRoutingAdderDlg((NILayer)m_LayerMgr.getLayer("NI"));
-                popupRoutingAdderDlg.updateInterface();
-                popupRoutingAdderDlg.setVisible(true);
-                RoutingModel.addElement("routing add");
-            }
-            if (e.getSource() == btnRoutingDelete) {
-                RoutingModel.addElement("routing delete");
-            }
-            if (e.getSource() == btnARPDelete) {
-                RoutingModel.addElement("arp delete");
-            }
-            if (e.getSource() == btnProxyAdd) {
-                RoutingModel.addElement("proxy add");
-            }
-            if (e.getSource() == btnProxyDelete) {
-                RoutingModel.addElement("proxy delete");
-            }
-        }
-    }
-
     public boolean receive(byte[] input) {
         String s;
         s = new String(input);
         return true;
     }
 
-    public void updateCacheTable(){
-        ARPModel.clear();
-        arpCacheTable.forEach((k,v) -> ARPModel.addElement(k+"  "+v.hardwareAddr+"  "+v.status+""));
+    public void updateRoutingTable() {
+
     }
 
-    public void updateProxyArpEntry(){
-        arpCacheTable = ARPCacheTable.getInstance().getCacheTable();
-        proxyModel.clear();
-        proxyArpTable.forEach((k,v) -> proxyModel.addElement(k+"  "+v.hostIpAddr+"  "+v.routerMacAddr+""));
+    public void updateCacheTable() {
+
+    }
+
+    public void updateProxyArpEntry() {
+
     }
 
     // IP 충돌시 메세지 뜨게함
-    public void IPCrash(){
+    public void IPCrash() {
         String msg = "IP주소 충돌이 발생하였습니다.";
-        JOptionPane.showMessageDialog(null,msg);
+        JOptionPane.showMessageDialog(null, msg);
     }
 
     @Override
