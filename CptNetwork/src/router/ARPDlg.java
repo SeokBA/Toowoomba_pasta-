@@ -88,8 +88,8 @@ public class ARPDlg extends JFrame implements BaseLayer {
     public ARPDlg(String pName) {
         tools =new Tools();
         pLayerName = pName;
-        proxyArpEntry=ProxyARPTable.getInstance().getProxyArpEntry();
-        cacheTable=ARPCacheTable.getInstance().getCacheTable();
+        proxyArpEntry=ProxyARPTable.getInstance().getTable();
+        cacheTable=ARPCacheTable.getInstance().getTable();
         setTitle("TestARP"); // main
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(250, 250, 797, 460);
@@ -425,7 +425,7 @@ public class ARPDlg extends JFrame implements BaseLayer {
                 proxyModel.remove(index);
             }
             if (e.getSource() == btnIpSend) { // Pushed "Send" button in ARP Cache Panel
-                cacheTable=ARPCacheTable.getInstance().getCacheTable();
+                cacheTable=ARPCacheTable.getInstance().getTable();
                 String findIP=tfIPAdr.getText();
                 cacheTable.put(findIP,new ARPCacheRecord("????????", "Incomplete"));
                 updateCacheTable();
@@ -458,7 +458,7 @@ public class ARPDlg extends JFrame implements BaseLayer {
     }
 
     public void updateProxyArpEntry(){
-        cacheTable=ARPCacheTable.getInstance().getCacheTable();
+        cacheTable=ARPCacheTable.getInstance().getTable();
         proxyModel.clear();
         proxyArpEntry.forEach((k,v) -> proxyModel.addElement(k+"  "+v.hostIpAddr+"  "+v.routerMacAddr+""));
     }

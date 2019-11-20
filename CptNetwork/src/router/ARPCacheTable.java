@@ -14,7 +14,7 @@ public class ARPCacheTable {
         return _Holder.instance;
     }
 
-    public Map<String, ARPCacheRecord> getCacheTable(){
+    public Map<String, ARPCacheRecord> getTable(){
         return arpCacheTable;
     }
 }

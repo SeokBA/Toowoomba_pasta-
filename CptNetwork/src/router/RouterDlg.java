@@ -1,7 +1,5 @@
 package router;
 
-import org.jnetpcap.PcapIf;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,13 +7,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.table.JTableHeader;
 
 public class RouterDlg extends JFrame implements BaseLayer {
     public int nUpperLayerCount = 0;
@@ -32,12 +27,12 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
     private static LayerManager m_LayerMgr = new LayerManager();
 
-    String[] staticRoutingHeader = {"Destination", "NetMask", "Gateway", "Flag", "Interface", "Metric"};
+    String[] routingHeader = {"Destination", "NetMask", "Gateway", "Flag", "Interface", "Metric"};
     String[] arpHeader = {"IP Address", "Ethernet Address", "Interface", "Flag"};
     String[] proxyHeader = {"IP Address", "Ethernet Address", "Interface"};
-    String[][] staticRoutingTable = {};
-    String[][] arpTable = {};
-    String[][] proxyTable = {};
+    String[][] routingTableStr = {};
+    String[][] arpTableStr = {};
+    String[][] proxyTableStr = {};
 
     Container contentPanel;
 
@@ -58,16 +53,16 @@ public class RouterDlg extends JFrame implements BaseLayer {
     JButton btnProxyAdd;
     JButton btnProxyDelete;
 
-    JTable staticRoutingArea;
+    JTable routingArea;
     JTable ARPArea;
     JTable proxyArea;
 
     PopupRoutingAdderDlg popupRoutingAdderDlg;
 
-    JLabel lbLeftHandIP;
-    JLabel lbRightHandIP;
-    JLabel lbLeftHandMAC;
-    JLabel lbRightHandMAC;
+    JLabel lbInterface_0IP;
+    JLabel lbInterface_1IP;
+    JLabel lbInterface_0MAC;
+    JLabel lbInterface_1MAC;
 
     setAddressListener setAddressListener = new setAddressListener();
     setMouseListener setMouseListener = new setMouseListener();
@@ -173,36 +168,36 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
 
         // List area
-        staticRoutingArea = new JTable(staticRoutingTable, staticRoutingHeader);
-        scrollRouting.setViewportView(staticRoutingArea);
+        routingArea = new JTable(routingTableStr, routingHeader);
+        scrollRouting.setViewportView(routingArea);
 
-        ARPArea = new JTable(arpTable, arpHeader);
+        ARPArea = new JTable(arpTableStr, arpHeader);
         scrollARP.setViewportView(ARPArea);
 
-        proxyArea = new JTable(proxyTable, proxyHeader);
+        proxyArea = new JTable(proxyTableStr, proxyHeader);
         scrollProxy.setViewportView(proxyArea);
 
 
         // Label
-        lbLeftHandIP = new JLabel("LeftHand IP      : ");
-        lbLeftHandIP.setBounds(20, 10, 260, 25);
-        lbLeftHandIP.addMouseListener(setMouseListener);
-        contentPanel.add(lbLeftHandIP);
+        lbInterface_0IP = new JLabel("Interface_0 IP      : ");
+        lbInterface_0IP.setBounds(20, 10, 260, 25);
+        lbInterface_0IP.addMouseListener(setMouseListener);
+        contentPanel.add(lbInterface_0IP);
 
-        lbLeftHandMAC = new JLabel("LeftHand MAC : ");
-        lbLeftHandMAC.setBounds(20, 30, 260, 25);
-        lbLeftHandMAC.addMouseListener(setMouseListener);
-        contentPanel.add(lbLeftHandMAC);
+        lbInterface_0MAC = new JLabel("Interface_0 MAC : ");
+        lbInterface_0MAC.setBounds(20, 30, 260, 25);
+        lbInterface_0MAC.addMouseListener(setMouseListener);
+        contentPanel.add(lbInterface_0MAC);
 
-        lbRightHandIP = new JLabel("RightHand IP      : ");
-        lbRightHandIP.setBounds(700, 10, 260, 25);
-        lbRightHandIP.addMouseListener(setMouseListener);
-        contentPanel.add(lbRightHandIP);
+        lbInterface_1IP = new JLabel("Interface_1 IP      : ");
+        lbInterface_1IP.setBounds(700, 10, 260, 25);
+        lbInterface_1IP.addMouseListener(setMouseListener);
+        contentPanel.add(lbInterface_1IP);
 
-        lbRightHandMAC = new JLabel("RightHand MAC : ");
-        lbRightHandMAC.setBounds(700, 30, 260, 25);
-        lbRightHandMAC.addMouseListener(setMouseListener);
-        contentPanel.add(lbRightHandMAC);
+        lbInterface_1MAC = new JLabel("Interface_1 MAC : ");
+        lbInterface_1MAC.setBounds(700, 30, 260, 25);
+        lbInterface_1MAC.addMouseListener(setMouseListener);
+        contentPanel.add(lbInterface_1MAC);
 
 
         setVisible(true);
@@ -214,8 +209,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
             if (e.getSource() == btnRoutingAdd) {
                 if (popupRoutingAdderDlg == null)
                     popupRoutingAdderDlg = new PopupRoutingAdderDlg((NILayer) m_LayerMgr.getLayer("NI"));
-                popupRoutingAdderDlg.updateInterface();
-                popupRoutingAdderDlg.setVisible(true);
+                popupRoutingAdderDlg.popup();
             }
             if (e.getSource() == btnRoutingDelete) { // routing delete
 
@@ -239,12 +233,12 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            if (e.getSource() == lbLeftHandIP || e.getSource() == lbLeftHandMAC) {
-                popupSelectNICDlg.popup("Left NIC", false);
+            if (e.getSource() == lbInterface_0IP || e.getSource() == lbInterface_0MAC) {
+                popupSelectNICDlg.popup("Interface_0 NIC", false);
             }
 
-            if (e.getSource() == lbRightHandIP || e.getSource() == lbRightHandMAC) {
-                popupSelectNICDlg.popup("Right NIC", true);
+            if (e.getSource() == lbInterface_1IP || e.getSource() == lbInterface_1MAC) {
+                popupSelectNICDlg.popup("Interface_1 NIC", true);
             }
         }
 
@@ -332,11 +326,11 @@ public class RouterDlg extends JFrame implements BaseLayer {
                         ex.printStackTrace();
                     }
                     if (!handChk) {
-                        lbLeftHandIP.setText("LeftHand IP      : " + ipAddressStr);
-                        lbLeftHandMAC.setText("LeftHand MAC : " + macAddressStr);
+                        lbInterface_0IP.setText("Interface_0 IP      : " + ipAddressStr);
+                        lbInterface_0MAC.setText("Interface_0 MAC : " + macAddressStr);
                     } else {
-                        lbRightHandIP.setText("RightHand IP      : " + ipAddressStr);
-                        lbRightHandMAC.setText("RightHand MAC : " + macAddressStr);
+                        lbInterface_1IP.setText("Interface_1 IP      : " + ipAddressStr);
+                        lbInterface_1MAC.setText("Interface_2 MAC : " + macAddressStr);
                     }
                     setVisible(false);
                 }
@@ -471,22 +465,34 @@ public class RouterDlg extends JFrame implements BaseLayer {
             // ComboBox
             addInterfaceComboBox = new JComboBox<>();
             addInterfaceComboBox.setBounds(110, 130, 190, 24);
+            addInterfaceComboBox.addItem("0");
+            addInterfaceComboBox.addItem("1");
             add(addInterfaceComboBox);
-            updateInterface();
         }
 
-        public void updateInterface() {
-            addInterfaceComboBox.removeAllItems();
-            for (int i = 0; i < m_NILayer.m_pAdapterList.size(); i++) {
-                addInterfaceComboBox.addItem(m_NILayer.m_pAdapterList.get(i).getDescription());
-            }
+        public void popup() {
+            setVisible(true);
         }
 
         class setPopupListener implements ActionListener {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getSource() == btnOK) { // Pushed "OK" button
-
+                    String dstIPAddr = tfDestination.getText();
+                    String netMask = tfNetmask.getText();
+                    String gateWay = tfGateway.getText();
+                    String flag = "";
+                    if (chkUpFlag.isSelected())
+                        flag += "U";
+                    if (chkGatewayFlag.isSelected())
+                        flag += "G";
+                    if (chkHostFlag.isSelected())
+                        flag += "H";
+                    int interface_num = addInterfaceComboBox.getSelectedIndex();
+                    int metric = 1;
+                    routingTable.getTable().put(dstIPAddr, new RoutingRecord(dstIPAddr, netMask, gateWay, flag, interface_num, metric));
+                    updateRoutingTable();
+                    setVisible(false);
                 }
 
                 if (e.getSource() == btnCancel) { // Pushed "Cancel" button
@@ -503,7 +509,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
     }
 
     public void updateRoutingTable() {
-
+        routingArea = new JTable(routingTableStr, routingHeader);
     }
 
     public void updateCacheTable() {

@@ -208,7 +208,7 @@ public class ARPLayer implements BaseLayer {
             if (input[i] != protocolType[i - 2])
                 return false;
         }
-        cacheTable = ARPCacheTable.getInstance().getCacheTable();
+        cacheTable = ARPCacheTable.getInstance().getTable();
 
         if (input[7] == 1) { // 상대방이 보낸 req받았을 때
             // 받아왔는데 자기가 아니고 테이블에 저장되있는 맥주소가 아니면 업데이트

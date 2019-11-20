@@ -17,7 +17,7 @@ public class ProxyARPTable {
         return _Holder.instance;
     }
 
-    public Map<String, ProxyARPRecord> getProxyArpEntry() {
+    public Map<String, ProxyARPRecord> getTable() {
         return proxyArpTable;
     }
 

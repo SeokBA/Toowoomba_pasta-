@@ -15,19 +15,30 @@ public class RoutingTable {
         return _Holder.instance;
     }
 
-    public Map<String, RoutingRecord> getCacheTable(){
+    public Map<String, RoutingRecord> getTable(){
         return routingTable;
+    }
+
+    public String[][] getStringArray(){
+        String[][] arr = new String[routingTable.size()][];
+        int idx = 0;
+        for(String i:routingTable.keySet()){
+            arr[idx] = routingTable.get(i).getStringArray();
+            idx++;
+        }
+        return arr;
     }
 }
 
 class RoutingRecord {
     private String dstAddr;
+    private String netmask;
     private String gateway;
-    private int metric;
     private String flag;
     private int interfaceNum;
+    private int metric;
 
-    public RoutingRecord(String dstAddr, String gateway, int metric, String flag, int interfaceNum) {
+    public RoutingRecord(String dstAddr, String netmask, String gateway, String flag, int interfaceNum, int metric) {
         this.dstAddr = dstAddr;
         this.gateway = gateway;
         this.metric = metric;
@@ -48,5 +59,9 @@ class RoutingRecord {
         if(flag.contains("M"))
             flagTemp += "M";
         return flagTemp;
+    }
+
+    public String[] getStringArray(){
+        return new String[]{dstAddr, netmask, gateway, flag, String.valueOf(interfaceNum), String.valueOf(metric)};
     }
 }
