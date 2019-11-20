@@ -1,71 +1,24 @@
-package Router;
+package router;
 
-import java.util.*;
-import java.util.Timer;
-
-import javax.swing.*;
-
+import java.util.ArrayList;
+import java.util.Map;
 
 public class ARPLayer implements BaseLayer {
-    public int nUnderLayerCount = 0;
-    public int nUpperLayerCount = 0;
-    public String pLayerName = null;
-    public BaseLayer p_UnderLayer = null;
-    public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
-    public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
-    DefaultListModel proxyModel;
-    Tool tool;
+    private int nUnderLayerCount = 0;
+    private int nUpperLayerCount = 0;
+    private String pLayerName = null;
+    private BaseLayer p_UnderLayer = null;
+    private ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
+    private ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
 
-    Timer timer = new Timer();
-    boolean returnFlag = false;
+    Map<String, ARPCacheRecord> cacheTable;
+
+    Tools tools;
 
     public ARPLayer(String pName) {
         pLayerName = pName;
+        tools = new Tools();
     }
-
-    TimerTask checkTime = new TimerTask() {
-        @Override
-        public void run() {
-            // TODO Auto-generated method stub
-            System.out.println("Reached Final Limit Time 5 sec");
-            if (returnFlag() == true) {
-                System.out.println("Good");
-            } else {
-                System.out.println("Failed");
-                byte[] tableAddr = getDstPTAddress();
-                String tableKey = tool.ipAddrByteToString(tableAddr);
-                if (arpCacheTable.isEmpty() == false) {
-                    arpCacheTable.remove(tableKey);
-                    ((RouterDlg) GetUpperLayer(0)).updateCacheTable();
-                    System.out.println(tableKey + " is Deleted from Cache Table");
-
-                }
-            }
-        }
-
-        private boolean returnFlag() {
-            return returnFlag;
-        }
-    };
-
-    TimerTask checkCompleted = new TimerTask() {
-        @Override
-        public void run() {
-            // TODO Auto-generated method stub
-            System.out.println("Cache Table Time Over : Delete Completed");
-            String tableKey = keyInfoStoredQueue.peek();
-
-            arpCacheTable.remove(tableKey);
-        }
-    };
-
-    public void setProxyModel(DefaultListModel proxyModel) {
-        this.proxyModel = proxyModel;
-    }
-
-    Map<String, ARPCacheRecord> arpCacheTable;
-    Queue<String> keyInfoStoredQueue = new LinkedList<>();
-    Map<String, ProxyARPRecord> proxyArpEntry;
 
     private class _ADDR {
         private byte[] addr;
@@ -93,11 +46,13 @@ public class ARPLayer implements BaseLayer {
         _ADDR dstPTAddr;
 
         public _ARP_MESSAGE() {
+            if(tools ==null)
+                tools = new Tools();
             this.hardwareType = new byte[2];
             this.hardwareType[0] = 0; // default
             this.hardwareType[1] = 1; // 이 부분만 사용
             this.protocolType = new byte[2];
-            byte[] hexToByte = tool.hexToByte2(800);
+            byte[] hexToByte = tools.hexToByte2(800);
             this.protocolType[0] = hexToByte[0];
             this.protocolType[1] = hexToByte[1];
             this.lengOfHardwareAddr = 6; // default
@@ -122,7 +77,6 @@ public class ARPLayer implements BaseLayer {
     }
 
     public void setOpcode(byte opcode) {
-//        arpMessage.opcode[1] = opcode;
         arpMessage.opcode[1] = opcode;
     }
 
@@ -137,17 +91,11 @@ public class ARPLayer implements BaseLayer {
         return arpMessage.srcHWAddr.addr;
     }
 
-    public byte[] getSrcPTAddr() {
-        return arpMessage.srcPTAddr.addr;
-    }
-
     public byte[] getDstPTAddress() {
         return arpMessage.dstPTAddr.addr;
     }
 
     public void setDstHWAddress(String address) {
-        if (address == null) // 상대방 맥주소 몰라요
-            address = "0:0:0:0:0:0";
         String[] sp = address.split(":");
         for (int i = 0; i < sp.length; i++) {
             byte toByte;
@@ -160,8 +108,14 @@ public class ARPLayer implements BaseLayer {
         }
     }
 
+    public byte[] setDstHWAddress(byte[] input) {
+        for (int i = 18; i < 24; i++)
+            input[i] = arpMessage.srcHWAddr.addr[i - 18];
+        return input;
+    }
+
     public void setSrcPTAddress(byte[] addr) {
-        // 보내는 사람의 IP주소, IPLayer에서 보낸 값으로 세팅
+        // 보내는 사람의 IP주소, GUI에서 세팅
         for (int i = 0; i < 4; i++) {
             arpMessage.srcPTAddr.addr[i] = addr[i];
         }
@@ -172,12 +126,6 @@ public class ARPLayer implements BaseLayer {
         for (int i = 0; i < 4; i++) {
             arpMessage.dstPTAddr.addr[i] = input[i + 15];
         }
-    }
-
-    public byte[] fillDstHWAddress(byte[] input) {
-        for (int i = 18; i < 24; i++)
-            input[i] = arpMessage.srcHWAddr.addr[i - 18];
-        return input;
     }
 
     public byte[] swapping(byte[] input) {
@@ -194,50 +142,41 @@ public class ARPLayer implements BaseLayer {
         return input;
     }
 
-
-    public boolean Send(byte[] input, int length, byte opcode) {
-        if (opcode == 1) { // req, gArp req도 별 다를게 없음 위에서 세팅 다 진행해줬으므로
+    public boolean send(byte[] input, int length, byte opcode) {
+        if (opcode == 1) { // request
             setOpcode(opcode);
             setDstPTAddress(input); // IPLayer에서 내려와야함
-            setDstHWAddress(null);
-            byte[] c = ObjToByte(arpMessage, input, length);
-            ((EthernetLayer) this.GetUnderLayer(0)).Send(c, length + 28, 1, new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
-
-            // Timer Seq
-            System.out.println("Send Request");
-            timer.schedule(checkTime, 5000);
-            // wait 5 sec and Judging Success or Fail
-
-
+            setDstHWAddress("0:0:0:0:0:0"); // 아직 상대방 맥주소를 모름
+            byte[] c = objToByte(arpMessage, input, length);
+            byte[] broadcast = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
+            ((EthernetLayer) this.getUnderLayer(0)).Send(c, length + 28, 1, broadcast);
+            return true;
         } else if (opcode == 2) { // reply
-            input = fillDstHWAddress(input);
+            input = setDstHWAddress(input);
             input = swapping(input);
             input[7] = opcode;
             byte[] dstAddr = new byte[6];
             for (int i = 18; i < 24; i++)
                 dstAddr[i - 18] = input[i];
-            ((EthernetLayer) this.GetUnderLayer(0)).Send(input, length, 2, dstAddr);
+            ((EthernetLayer) this.getUnderLayer(0)).Send(input, length, 2, dstAddr);
             return true;
         }
         return false;
     }
 
-    public boolean Send(byte[] input, int length, byte opcode, String addr) {
+    public boolean send(byte[] input, int length, byte opcode, String addr) {
         // reply
-        byte[] hostMacAddr = tool.hwAddrStringToByte(addr);
+        byte[] hostMacAddr = tools.string2HWaddr(addr);
         for (int i = 18; i < 24; i++)
             input[i] = hostMacAddr[i - 18];
         input = swapping(input);
         input[7] = opcode;
-        byte[] dstAddr = new byte[6];
-        for (int i = 18; i < 24; i++)
-            dstAddr[i - 18] = input[i];
-        ((EthernetLayer) this.GetUnderLayer(0)).Send(input, length, 2, dstAddr);
+        byte[] dstAddr = tools.extractSelectPart(input, 18, 24);
+        ((EthernetLayer) this.getUnderLayer(0)).Send(input, length, 2, dstAddr);
         return true;
     }
 
-
-    public byte[] ObjToByte(_ARP_MESSAGE msg, byte[] input, int length) {
+    public byte[] objToByte(_ARP_MESSAGE msg, byte[] input, int length) {
         byte[] buf = new byte[length + 28];
         buf[0] = msg.hardwareType[0];
         buf[1] = msg.hardwareType[1];
@@ -260,163 +199,96 @@ public class ARPLayer implements BaseLayer {
         return buf;
     }
 
-    public byte[] RemoveCappHeader(byte[] input, int length) {
-        byte[] buf = new byte[length - 28];
-        for (int i = 0; i < length - 28; i++) {
-            buf[i] = input[i + 28];
-        }
-        return buf;
-    }
-
-    // todo 하드웨어타입 프로토콜타입이런거도 다 확인해줘야함
-    public synchronized boolean Receive(byte[] input) {
+    public synchronized boolean receive(byte[] input) {
         // 자기가 보낸거면 뭐 할거 없으므로 걸러냄
-        byte[] senderHWaddr = new byte[6];
-        for (int i = 8; i < 14; i++)
-            senderHWaddr[i - 8] = input[i];
-        boolean isMyPacket = true;
-        for (int i = 0; i < 6; i++) {
-            if (senderHWaddr[i] != arpMessage.srcHWAddr.addr[i]) {
-                isMyPacket = false;
-                break;
-            }
-        }
-        if (isMyPacket)
+        if (isItMyPacket(input))
             return false;
-
-        byte[] protocolType = tool.hexToByte2(800);
+        byte[] protocolType = tools.hexToByte2(800); // 프로토콜 타입 검사
         for (int i = 2; i < 4; i++) {
             if (input[i] != protocolType[i - 2])
                 return false;
         }
-
-        arpCacheTable = ARPCacheTable.getInstance().getCacheTable();
+        cacheTable = ARPCacheTable.getInstance().getCacheTable();
 
         if (input[7] == 1) { // 상대방이 보낸 req받았을 때
             // 받아왔는데 자기가 아니고 테이블에 저장되있는 맥주소가 아니면 업데이트
-            byte[] senderPTaddr = new byte[4];
-            for (int i = 14; i < 18; i++)
-                senderPTaddr[i - 14] = input[i];
+            byte[] senderPTaddr = tools.extractSelectPart(input,14,18);
+            byte[] senderHWaddr = tools.extractSelectPart(input, 8, 14);
+            String senderPTaddrStr = tools.bytePTAddrToString(senderPTaddr);
+            String senderHWaddrStr = tools.byteHWAddrToString(senderHWaddr);
+            cacheTable.put(senderPTaddrStr, new ARPCacheRecord(senderHWaddrStr, "Complete"));
+            ((ARPDlg) getUpperLayer(0)).updateCacheTable();
 
-            String senderPTaddrStr = tool.ipAddrByteToString(senderPTaddr);
-
-            // sender의 PTaddr과 내 PTaddr이 같다면 gARP 송수신 과정에서 IP충돌이 발생한 것
-            if (senderPTaddr == getSrcPTAddr()) {
-                // IP 충돌이 일어난 경우
-                ((RouterDlg) p_aUpperLayer.get(0)).IPCrash();
-
-                return false;
-            }
-
-            String senderHWaddrStr = tool.hwAddrByteToString(senderHWaddr, ':');
-            if (arpCacheTable.get(senderPTaddrStr) == null) {
-                arpCacheTable.put(senderPTaddrStr, new ARPCacheRecord(senderHWaddrStr, "Complete"));
-
-                // Timer Seq
-                keyInfoStoredQueue.add(senderPTaddrStr);
-                System.out.println("Cache Table Remaining Time Checking Start");
-                timer.schedule(checkCompleted, 10000);
-
-                System.out.println(senderHWaddrStr);
-                ((RouterDlg) GetUpperLayer(0)).updateCacheTable();
-                // todo GUI에 이 테이블 데이터 업데이트 과정 필요
-            }
-            // 자기가 아닌데 테이블에 이미 있었으면 gArp할때 보낸 것임.
-            // 만약 arp에서 처리했다고 해도 테이블에 들어갈 내용은 변화가 없으니 상관없음
-            // 엥 뭐여 그럼 같은 동작하는거네
-            else {
-                arpCacheTable.put(senderPTaddrStr, new ARPCacheRecord(senderHWaddrStr, "Complete"));
-
-                // Timer Seq
-                keyInfoStoredQueue.add(senderPTaddrStr);
-                System.out.println("Cache Table Remaining Time Checking Start");
-                timer.schedule(checkCompleted, 10000);
-
-                System.out.println(senderHWaddrStr);
-                ((RouterDlg) GetUpperLayer(0)).updateCacheTable();
-            }
-
-            // 맥주소를 알고싶은 타겟이 자신인지 확인
-            byte[] targetPTaddr = new byte[4];
-            boolean isTarget = true;
-            for (int i = 24; i < 28; i++)
-                targetPTaddr[i - 24] = input[i];
-
-            String targetPTaddrStr = tool.ipAddrByteToString(targetPTaddr);
-            proxyArpEntry = ProxyARPTable.getInstance().getProxyArpEntry();
-            if (ProxyARPTable.getInstance().isInProxyArpEntry(targetPTaddrStr)) {
-                Send(input, input.length, (byte) 2, ProxyARPTable.getInstance().getMacAddr(targetPTaddrStr));
-                System.out.println("proxyARP send");
-            } else {
-                for (int i = 0; i < 4; i++) {
-                    if (targetPTaddr[i] != arpMessage.srcPTAddr.addr[i]) {
-                        isTarget = false;
-                        break;
-                    }
-                }
-                if (isTarget) {
-                    Send(input, input.length, (byte) 2);
-                }
-            }
-            // 내 맥주소를 알려줄께!
-            byte[] data;
-            data = RemoveCappHeader(input, input.length);
+            byte[] targetPTaddr = tools.extractSelectPart(input, 24, 28);
+            String targetPTaddrStr = tools.bytePTAddrToString(targetPTaddr);
+            String srcHWaddrStr = tools.byteHWAddrToString(getSrcHWAddress());
+            if (ProxyARPTable.getInstance().isInProxyArpEntry(targetPTaddrStr)) // proxyArp 데이터 먼저 검사
+                send(input, input.length, (byte) 2, srcHWaddrStr);
+            else if (isTarget(input)) // 내 맥주소를 알려줄께!
+                send(input, input.length, (byte) 2);
 
         } else if (input[7] == 2) { // reply도착했을 때
-            returnFlag = true;
-            String dstPTAddr = tool.ipAddrByteToString(getDstPTAddress());
-            byte[] srcHWAddr = new byte[6];
-            for (int i = 8; i < 14; i++)
-                srcHWAddr[i - 8] = input[i];
-            String srcHWAddrStr = tool.hwAddrByteToString(srcHWAddr, ':');
-            arpCacheTable.put(dstPTAddr, new ARPCacheRecord(srcHWAddrStr, "Complete"));
-
-            // Timer Seq
-            keyInfoStoredQueue.add(dstPTAddr);
-            System.out.println("Cache Table Remaining Time Checking Start");
-            timer.schedule(checkCompleted, 10000);
-            ((RouterDlg) GetUpperLayer(0)).updateCacheTable();
+            String dstPTAddrStr = tools.bytePTAddrToString(getDstPTAddress());
+            byte[] srcHWAddr = tools.extractSelectPart(input, 8, 14);
+            String srcHWAddrStr = tools.byteHWAddrToString(srcHWAddr);
+            cacheTable.put(dstPTAddrStr, new ARPCacheRecord(srcHWAddrStr, "Complete"));
+            ((ARPDlg) getUpperLayer(0)).updateCacheTable();
         }
-        returnFlag = false;
+        return true;
+    }
+
+    private boolean isItMyPacket(byte[] input) {
+        for (int i = 0; i < 6; i++) {
+            if (arpMessage.srcHWAddr.addr[i] != input[8 + i])
+                return false;
+        }
+        return true;
+    }
+
+    private boolean isTarget(byte[] input) {
+        for (int i = 0; i < 4; i++) {
+            if (arpMessage.srcPTAddr.addr[i] != input[24 + i])
+                return false;
+        }
         return true;
     }
 
     @Override
-    public String GetLayerName() {
+    public String getLayerName() {
         return pLayerName;
     }
 
     @Override
-    public BaseLayer GetUnderLayer(int nindex) {
+    public BaseLayer getUnderLayer(int nindex) {
         if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
             return null;
         return p_aUnderLayer.get(nindex);
     }
 
     @Override
-    public BaseLayer GetUpperLayer(int nindex) {
+    public BaseLayer getUpperLayer(int nindex) {
         if (nindex < 0 || nindex > nUpperLayerCount || nUpperLayerCount < 0)
             return null;
         return p_aUpperLayer.get(nindex);
     }
 
     @Override
-    public void SetUnderLayer(BaseLayer pUnderLayer) {
+    public void setUnderLayer(BaseLayer pUnderLayer) {
         if (pUnderLayer == null)
             return;
         this.p_aUnderLayer.add(nUnderLayerCount++, pUnderLayer);
     }
 
     @Override
-    public void SetUpperLayer(BaseLayer pUpperLayer) {
+    public void setUpperLayer(BaseLayer pUpperLayer) {
         if (pUpperLayer == null)
             return;
         this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);
     }
 
     @Override
-    public void SetUpperUnderLayer(BaseLayer pUULayer) {
-        this.SetUpperLayer(pUULayer);
-        pUULayer.SetUnderLayer(this);
+    public void setUpperUnderLayer(BaseLayer pUULayer) {
+        this.setUpperLayer(pUULayer);
+        pUULayer.setUnderLayer(this);
     }
 }

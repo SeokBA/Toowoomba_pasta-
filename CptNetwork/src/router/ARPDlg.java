@@ -282,7 +282,7 @@ public class ARPDlg extends JFrame implements BaseLayer {
                             byte[] macAddress = ((NILayer) m_LayerMgr.getLayer("NI")).getMacAddress(i);
                             ((EthernetLayer) m_LayerMgr.getLayer("EtherNet")).setEnetSrcAddress(macAddress);
                             ((ARPLayer) m_LayerMgr.getLayer("ARP")).setSrcHWAddress(macAddress);
-                            String macAddressStr=tools.hwAddrByte2String(macAddress, '-');
+                            String macAddressStr=hwAddrByte2String(macAddress);
                             for(int k=0; k<macAddress.length; k++){
                                 selectedHWAddr[k]=macAddress[k];
                             }
@@ -294,7 +294,7 @@ public class ARPDlg extends JFrame implements BaseLayer {
                                 ((IPLayer) m_LayerMgr.getLayer("IP")).setSrcAddress(ipAddress);
                                 ((ARPLayer) m_LayerMgr.getLayer("ARP")).setSrcPTAddress(ipAddress);
                             }
-                            String ipAddressStr=tools.ipAddrByte2String(ipAddress);
+                            String ipAddressStr=ipAddrByte2String(ipAddress);
                             lbMyIP.setText("My IP Address : "+ipAddressStr);
                             lbMyHW.setText("My Mac Address : "+macAddressStr);
                             ((NILayer) m_LayerMgr.getLayer("NI")).setAdapterNumber(adapterNumber);
@@ -486,6 +486,39 @@ public class ARPDlg extends JFrame implements BaseLayer {
         cacheTable=ARPCacheTable.getInstance().getCacheTable();
         proxyModel.clear();
         proxyArpEntry.forEach((k,v) -> proxyModel.addElement(k+"  "+v.hostIpAddr+"  "+v.routerMacAddr+""));
+    }
+
+    public String hwAddrByte2String(byte[] addr){
+        StringBuilder sb = new StringBuilder();
+        int temp;
+        for (int j = 0; j < addr.length; j++) {
+            if (sb.length() != 0)
+                sb.append('-');
+            if (addr[j] >= 0 && addr[j] < 16)
+                sb.append('0');
+            if (addr[j] < 0)
+                temp = addr[j] + 256;
+            else
+                temp = addr[j];
+            String hex = Integer.toHexString(temp).toUpperCase();
+            sb.append(hex);
+        }
+        return sb.toString();
+    }
+
+    public String ipAddrByte2String(byte[] addr){
+        StringBuilder sb = new StringBuilder();
+        int temp;
+        for (int j = 0; j < addr.length; j++) {
+            if (sb.length() != 0)
+                sb.append('.');
+            if (addr[j] < 0)
+                temp = addr[j] + 256;
+            else
+                temp = addr[j];
+            sb.append(temp);
+        }
+        return sb.toString();
     }
 
     public boolean receive(byte[] input) {

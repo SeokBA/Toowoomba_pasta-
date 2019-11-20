@@ -1,173 +1,198 @@
-package Router;
+package router;
 
 import java.util.ArrayList;
 
-public class EthernetLayer implements BaseLayer {
-    public int nUnderLayerCount = 0;
-    public int nUpperLayerCount = 0;
-    public String pLayerName = null;
-    public BaseLayer p_UnderLayer = null;
-    public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
-    public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
-    Tool tool;
-
-    _ETHERNET_Frame m_sHeader = new _ETHERNET_Frame();
+public class EthernetLayer implements BaseLayer{
+    private int nUnderLayerCount = 0;
+    private int nUpperLayerCount = 0;
+    private String pLayerName = null;
+    private BaseLayer p_UnderLayer = null;
+    private ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
+    private ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
+    Tools tools;
 
     public EthernetLayer(String pName) {
         pLayerName = pName;
-        ResetHeader();
+        tools =new Tools();
     }
 
-    public void ResetHeader() {
-        m_sHeader = new _ETHERNET_Frame();
-    }
-
-    private class _ETHERNET_ADDR {
+    private class _ETHERNET_ADDR{
         private byte[] addr = new byte[6];
-
         public _ETHERNET_ADDR() {
-            this.addr[0] = (byte) 0x00;
-            this.addr[1] = (byte) 0x00;
-            this.addr[2] = (byte) 0x00;
-            this.addr[3] = (byte) 0x00;
-            this.addr[4] = (byte) 0x00;
-            this.addr[5] = (byte) 0x00;
+            this.addr[0]=(byte)0x00;
+            this.addr[1]=(byte)0x00;
+            this.addr[2]=(byte)0x00;
+            this.addr[3]=(byte)0x00;
+            this.addr[4]=(byte)0x00;
+            this.addr[5]=(byte)0x00;
         }
     }
-
-    private class _ETHERNET_Frame {
+    private class _ETHERNET_Frame{
         _ETHERNET_ADDR enet_dstaddr;
         _ETHERNET_ADDR enet_srcaddr;
         byte[] enet_type;
         byte[] enet_data;
-
         public _ETHERNET_Frame() {
             this.enet_dstaddr = new _ETHERNET_ADDR();
             this.enet_srcaddr = new _ETHERNET_ADDR();
-            this.enet_type = new byte[2];
-            this.enet_data = null;
+            this.enet_type=new byte[2];
+            this.enet_data=null;
         }
     }
 
-    public byte[] ObjToByte(_ETHERNET_Frame Header, byte[] input, int length, int isArp, byte[] dstAddr) {
-        byte[] buf = new byte[length + 14];
+    _ETHERNET_Frame efHeader = new _ETHERNET_Frame();
 
-        SetEnetDstAddress(dstAddr);
-        if (isArp > 0) // todo: 다시볼것
-            setType(tool.hexToByte2(806));
-        else
-            setType(tool.hexToByte2(0));
-
-        for (int i = 0; i < 6; i++) { // Receiver
-            buf[i] = Header.enet_dstaddr.addr[i];
-            buf[i + 6] = Header.enet_srcaddr.addr[i]; // Sender
+    public void setDstAddress(byte[] addr){
+        for(int i=0; i<addr.length; i++){
+            efHeader.enet_dstaddr.addr[i]=addr[i];
         }
+    }
+
+    public void setEnetDstAddress(String address) {
+        String[] sp=address.split(":");
+        for(int i=0; i<sp.length; i++){
+            byte toByte;
+            int toInt = Integer.decode("0x"+sp[i]);
+            if(toInt>127)
+                toByte=(byte)(toInt-256);
+            else
+                toByte=(byte)toInt;
+            efHeader.enet_dstaddr.addr[i]=toByte;
+        }
+    }
+
+    public void setEnetSrcAddress(String address) {
+        String[] sp=address.split(":");
+        for(int i=0; i<sp.length; i++){
+            byte toByte;
+            int toInt = Integer.decode("0x"+sp[i]);
+            if(toInt>127)
+                toByte=(byte)(toInt-256);
+            else
+                toByte=(byte)toInt;
+            efHeader.enet_srcaddr.addr[i]=toByte;
+        }
+    }
+
+    public void setEnetSrcAddress(byte[] addr){
+        for(int i=0; i<addr.length; i++){
+            efHeader.enet_srcaddr.addr[i]=addr[i];
+        }
+    }
+
+    public void setType(byte[] type){
+        efHeader.enet_type[0]=type[0];
+        efHeader.enet_type[1]=type[1];
+    }
+
+    public byte[] objToByte(_ETHERNET_Frame Header, byte[] input, int length, int isArp, byte[] dstAddr) {
+        byte[] buf = new byte[length + 14];
+        if(isArp>0) { // ARPLayer에서 내려옴
+            setType(tools.hexToByte2(806));
+            setDstAddress(dstAddr);
+        }
+        else { // message
+            setType(tools.hexToByte2(0));
+        }
+        for(int i=0; i<6; i++) // Receiver
+            buf[i] = Header.enet_dstaddr.addr[i];
+        for(int i=6; i<12; i++) // Sender
+            buf[i] = Header.enet_srcaddr.addr[i-6];
         buf[12] = Header.enet_type[0];
         buf[13] = Header.enet_type[1];
-        for (int i = 0; i < length; i++)
+        for (int i = 0; i < input.length; i++)
             buf[14 + i] = input[i];
-
         return buf;
     }
 
-    public void setType(byte[] input) {
-        m_sHeader.enet_type = input;
-    }
-
     public boolean Send(byte[] input, int length, int isArp, byte[] dstAddr) {
-        byte[] c = ObjToByte(m_sHeader, input, length, isArp, dstAddr);
-        this.GetUnderLayer(0).Send(c, length + 14);
+        byte[] c= objToByte(efHeader, input, length, isArp, dstAddr);
+        this.getUnderLayer(0).send(c,length+14);
         return true;
     }
 
-    public byte[] RemoveEthernetHeader(byte[] input, int length) {
-        byte[] cpyInput = new byte[length - 14];
-        System.arraycopy(input, 14, cpyInput, 0, length - 14);
-        input = cpyInput;
-        return input;
+    public synchronized boolean receive(byte[] input) {
+        // 자기가 보낸 패킷, 브로드캐스트가 아니면서 내가 타겟이 아니면 false
+        if(isItMyPacket(input)||(!isBroadCast(input)&&!isTargetMe(input)))
+            return false;
+        byte[] data = tools.removeCappHeader(input, input.length,14);
+        if(isArp(input)) // arp
+            this.getUpperLayer(1).receive(data);
+        else // message
+            this.getUpperLayer(0).receive(data);
+        return true;
     }
 
-    public synchronized boolean Receive(byte[] input) {
-        byte[] data;
-
-        if ((chkAddr(input) || (isBroadcast(input))) && !isMyPacket(input)) {
-            data = RemoveEthernetHeader(input, input.length);
-            if (input[12] == (byte) 0x03 && input[13] == (byte) 0x26) // arp
-                this.GetUpperLayer(1).Receive(data);
-            else // message
-                this.GetUpperLayer(0).Receive(data);
+    public boolean isItMyPacket(byte[] input) {
+        for (int i = 0; i < 6; i++) {
+            if (efHeader.enet_srcaddr.addr[i] != input[6 + i])
+                return false;
         }
-        return false;
-    }
-
-    private boolean isBroadcast(byte[] bytes) {
-        for (int i = 0; i < 6; i++)
-            if (bytes[i] != (byte) 0xff)
-                return false;
         return true;
     }
 
-    private boolean isMyPacket(byte[] input) {
-        for (int i = 0; i < 6; i++)
-            if (m_sHeader.enet_srcaddr.addr[i] != input[6 + i])
+    public boolean isBroadCast(byte[] input) {
+        for (int i = 0; i < 6; i++) {
+            if ((byte)0xFF != input[i])
                 return false;
+        }
         return true;
     }
 
-    private boolean chkAddr(byte[] input) {
-        // todo: 내 네트워크 안에 포함된 기기들도 true로 반환, proxytable을 봐줘야 함
-        for (int i = 0; i < 6; i++)
-            if (m_sHeader.enet_srcaddr.addr[i] != input[i])
+    public boolean isTargetMe(byte[] input){
+        for (int i = 0; i < 6; i++) {
+            if (input[i] != efHeader.enet_srcaddr.addr[i])
                 return false;
+        }
         return true;
     }
 
-    public void SetEnetSrcAddress(byte[] srcAddress) {
-        // TODO Auto-generated method stub
-        m_sHeader.enet_srcaddr.addr = srcAddress;
-    }
-
-    public void SetEnetDstAddress(byte[] dstAddress) {
-        // TODO Auto-generated method stub
-        m_sHeader.enet_dstaddr.addr = dstAddress;
+    public boolean isArp(byte[] input){
+        byte[] type= tools.extractSelectPart(input,12,14);
+        byte[] arpPacketType= tools.hexToByte2(806);
+        for(int i=0; i<arpPacketType.length; i++){
+            if(type[i]!=arpPacketType[i])
+                return false;
+        }
+        return true;
     }
 
     @Override
-    public String GetLayerName() {
+    public String getLayerName() {
         return pLayerName;
     }
 
     @Override
-    public BaseLayer GetUnderLayer(int nindex) {
+    public BaseLayer getUnderLayer(int nindex) {
         if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
             return null;
         return p_aUnderLayer.get(nindex);
     }
 
     @Override
-    public BaseLayer GetUpperLayer(int nindex) {
+    public BaseLayer getUpperLayer(int nindex) {
         if (nindex < 0 || nindex > nUpperLayerCount || nUpperLayerCount < 0)
             return null;
         return p_aUpperLayer.get(nindex);
     }
 
     @Override
-    public void SetUnderLayer(BaseLayer pUnderLayer) {
+    public void setUnderLayer(BaseLayer pUnderLayer) {
         if (pUnderLayer == null)
             return;
         this.p_aUnderLayer.add(nUnderLayerCount++, pUnderLayer);
     }
 
     @Override
-    public void SetUpperLayer(BaseLayer pUpperLayer) {
+    public void setUpperLayer(BaseLayer pUpperLayer) {
         if (pUpperLayer == null)
             return;
         this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);
     }
 
     @Override
-    public void SetUpperUnderLayer(BaseLayer pUULayer) {
-        this.SetUpperLayer(pUULayer);
-        pUULayer.SetUnderLayer(this);
+    public void setUpperUnderLayer(BaseLayer pUULayer) {
+        this.setUpperLayer(pUULayer);
+        pUULayer.setUnderLayer(this);
     }
 }

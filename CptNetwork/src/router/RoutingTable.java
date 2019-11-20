@@ -1,4 +1,4 @@
-package Router;
+package router;
 
 import java.util.HashMap;
 import java.util.Map;

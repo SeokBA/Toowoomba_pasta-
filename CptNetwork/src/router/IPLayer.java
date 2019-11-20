@@ -10,53 +10,60 @@ public class IPLayer implements BaseLayer{
     private ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
     Tools tools;
 
-    _IP_Frame m_sHeader = new _IP_Frame();
-
     public IPLayer(String pName) {
         pLayerName = pName;
         tools =new Tools();
     }
 
-    public void ResetHeader() {
-        m_sHeader = new _IP_Frame();
-    }
-
-    private class _IP_ADDR {
+    private class _IP_ADDR{
         private byte[] addr = new byte[4];
-
         public _IP_ADDR() {
-            this.addr[0] = (byte) 0x00;
-            this.addr[1] = (byte) 0x00;
-            this.addr[2] = (byte) 0x00;
-            this.addr[3] = (byte) 0x00;
+            this.addr[0]=(byte)0x00;
+            this.addr[1]=(byte)0x00;
+            this.addr[2]=(byte)0x00;
+            this.addr[3]=(byte)0x00;
         }
     }
 
-    private class _IP_Frame {
-        byte ip_ver; // 1byte
-        byte ip_type; // 1byte
-        byte[] ip_len; // 2byte 4
-        byte[] ip_id; // 2byte 6
-        byte[] ip_fragoff; // 2byte 8
-        byte ip_totlen;
-        byte ip_proto;
-        byte ip_checksum;
-        _IP_ADDR ip_srcaddr;
-        _IP_ADDR ip_dstaddr;
-        byte[] ip_data;
+    private class _IP_HEADER{
+        byte ipVersion; // 1byte
+        byte ipType; // 1byte
+        byte[] ipLength; // 2byte 4
+        byte[] ipId; // 2byte 6
+        byte[] ipFragOff; // 2byte 8
+        byte ipTtl;
+        byte ipProto;
+        byte ipCheckSum;
+        _IP_ADDR ipSrc;
+        _IP_ADDR ipDst;
+        byte[] ipData;
 
-        public _IP_Frame() {
-            this.ip_ver = 0x00;
-            this.ip_type = 0x00;
-            this.ip_len = new byte[2];
-            this.ip_id = new byte[2];
-            this.ip_fragoff = new byte[2];
-            this.ip_totlen = 0x00;
-            this.ip_proto = 0x00;
-            this.ip_checksum = 0x00;
-            this.ip_srcaddr = new _IP_ADDR();
-            this.ip_dstaddr = new _IP_ADDR();
-            this.ip_data = null;
+        public _IP_HEADER() {
+            this.ipVersion=0x00;
+            this.ipType=0x00;
+            this.ipLength=new byte[2];
+            this.ipId=new byte[2];
+            this.ipFragOff=new byte[2];
+            this.ipTtl=0x00;
+            this.ipProto=0x00;
+            this.ipCheckSum=0x00;
+            this.ipSrc = new _IP_ADDR();
+            this.ipDst = new _IP_ADDR();
+            this.ipData=null;
+        }
+    }
+
+    _IP_HEADER ipHeader = new _IP_HEADER();
+
+    public void setDstAddress(byte[] addr){
+        for(int i=0; i<addr.length; i++){
+            ipHeader.ipDst.addr[i]=addr[i];
+        }
+    }
+
+    public void setSrcAddress(byte[] addr){
+        for(int i=0; i<addr.length; i++){
+            ipHeader.ipSrc.addr[i]=addr[i];
         }
     }
 
@@ -65,18 +72,18 @@ public class IPLayer implements BaseLayer{
         String extractDataStr=new String(extractData);
         String[] extractDataStrSplit=extractDataStr.split("\\.|:");
         // Send할 데이터가 IPv4의 형식인지 검사
-        if (extractDataStrSplit.length == 4) {
-            byte[] dstIPByte = new byte[4];
-            try {
-                for (int i = 0; i < extractDataStrSplit.length; i++) {
-                    int part = Integer.parseInt(extractDataStrSplit[i]);
-                    if (part > 127) {
-                        dstIPByte[i] = (byte) (part - 256);
+        if(extractDataStrSplit.length==4){
+            byte[] dstIPByte=new byte[4];
+            try{
+                for(int i=0; i<extractDataStrSplit.length; i++){
+                    int part=Integer.parseInt(extractDataStrSplit[i]);
+                    if(part>127){
+                        dstIPByte[i]=(byte)(part-256);
                     } else {
-                        dstIPByte[i] = (byte) part;
+                        dstIPByte[i]=(byte)part;
                     }
                 }
-            } catch (Exception e) {
+            } catch (Exception e){
                 e.printStackTrace();
             }
             setDstAddress(dstIPByte);
@@ -135,25 +142,6 @@ public class IPLayer implements BaseLayer{
                 return false;
         }
         return true;
-    }
-
-    public boolean isMyPacket(byte[] input) {
-        for (int i = 0; i < 6; i++)
-            if (m_sHeader.ip_srcaddr.addr[i] != input[15 + i])
-                return false;
-        return true;
-    }
-
-    public void setIPSrcAddress(byte[] addr) {
-        for (int i = 0; i < addr.length; i++) {
-            m_sHeader.ip_srcaddr.addr[i] = addr[i];
-        }
-    }
-
-    public void setIPDstAddress(byte[] addr) {
-        for (int i = 0; i < addr.length; i++) {
-            m_sHeader.ip_dstaddr.addr[i] = addr[i];
-        }
     }
 
     @Override
