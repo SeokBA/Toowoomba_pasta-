@@ -335,8 +335,8 @@ public class RouterDlg extends JFrame implements BaseLayer {
                         lbLeftHandIP.setText("LeftHand IP      : " + ipAddressStr);
                         lbLeftHandMAC.setText("LeftHand MAC : " + macAddressStr);
                     } else {
-                        lbRightHandIP.setText("LeftHand IP      : " + ipAddressStr);
-                        lbRightHandMAC.setText("LeftHand MAC : " + macAddressStr);
+                        lbRightHandIP.setText("RightHand IP      : " + ipAddressStr);
+                        lbRightHandMAC.setText("RightHand MAC : " + macAddressStr);
                     }
                     setVisible(false);
                 }
