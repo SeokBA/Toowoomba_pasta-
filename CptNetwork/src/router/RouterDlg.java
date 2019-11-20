@@ -1,4 +1,4 @@
-package Router;//import org.jnetpcap.PcapAddr;
+package router;
 //import org.jnetpcap.PcapIf;
 
 import java.awt.*;
@@ -54,22 +54,15 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
     PopupRoutingAdderDlg popupRoutingAdderDlg;
 
-    Tool tool;
+    Tools tools;
 
     public static void main(String[] args) {
-        m_LayerMgr.AddLayer(new Router.NILayer("NI_1"));
-        m_LayerMgr.AddLayer(new Router.EthernetLayer("EtherNet_1"));
-        m_LayerMgr.AddLayer(new Router.ARPLayer("ARP_1"));
-        m_LayerMgr.AddLayer(new Router.IPLayer("IP_1"));
-        m_LayerMgr.AddLayer(new Router.NILayer("NI_2"));
-        m_LayerMgr.AddLayer(new Router.EthernetLayer("EtherNet_2"));
-        m_LayerMgr.AddLayer(new Router.ARPLayer("ARP_2"));
-        m_LayerMgr.AddLayer(new Router.IPLayer("IP_2"));
-        m_LayerMgr.AddLayer(new RouterDlg("GUI"));
-
-        m_LayerMgr.ConnectLayers(" NI_1 ( *EtherNet_1 ( *IP_1 ( -ARP_1 )  -ARP_1 ) ) ");
-        m_LayerMgr.ConnectLayers(" NI_2 ( *EtherNet_2 ( *IP_2 ( -ARP_2 )  -ARP_2 ) ) ");
-        m_LayerMgr.ConnectLayers(" GUI ( *IP_1 ( *IP_2 ) *IP_2 )");
+        m_LayerMgr.addLayer(new NILayer("NI"));
+        m_LayerMgr.addLayer(new EthernetLayer("EtherNet"));
+        m_LayerMgr.addLayer(new IPLayer("IP"));
+        m_LayerMgr.addLayer(new ARPLayer("ARP"));
+        m_LayerMgr.addLayer(new RouterDlg("GUI"));
+        m_LayerMgr.connectLayers("NI ( *EtherNet ( *IP ( *GUI ) ) *EtherNet ( *ARP ( *GUI ) *ARP ( *IP ) ) )");
     }
 
     public RouterDlg(String pName) {
@@ -331,7 +324,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
         public void actionPerformed(ActionEvent e) {
             if (e.getSource() == btnRoutingAdd) {
                 if (popupRoutingAdderDlg == null)
-                    popupRoutingAdderDlg = new PopupRoutingAdderDlg((NILayer)m_LayerMgr.GetLayer("NI"));
+                    popupRoutingAdderDlg = new PopupRoutingAdderDlg((NILayer)m_LayerMgr.getLayer("NI"));
                 popupRoutingAdderDlg.updateInterface();
                 popupRoutingAdderDlg.setVisible(true);
                 RoutingModel.addElement("routing add");
@@ -351,7 +344,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
         }
     }
 
-    public boolean Receive(byte[] input) {
+    public boolean receive(byte[] input) {
         String s;
         s = new String(input);
         return true;
@@ -375,14 +368,14 @@ public class RouterDlg extends JFrame implements BaseLayer {
     }
 
     @Override
-    public void SetUnderLayer(BaseLayer pUnderLayer) {
+    public void setUnderLayer(BaseLayer pUnderLayer) {
         if (pUnderLayer == null)
             return;
         this.p_aUnderLayer.add(nUnderLayerCount++, pUnderLayer);
     }
 
     @Override
-    public void SetUpperLayer(BaseLayer pUpperLayer) {
+    public void setUpperLayer(BaseLayer pUpperLayer) {
         if (pUpperLayer == null)
             return;
         this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);
@@ -390,27 +383,27 @@ public class RouterDlg extends JFrame implements BaseLayer {
     }
 
     @Override
-    public String GetLayerName() {
+    public String getLayerName() {
         return pLayerName;
     }
 
     @Override
-    public BaseLayer GetUnderLayer(int nindex) {
+    public BaseLayer getUnderLayer(int nindex) {
         if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
             return null;
         return p_aUnderLayer.get(nindex);
     }
 
     @Override
-    public BaseLayer GetUpperLayer(int nindex) {
+    public BaseLayer getUpperLayer(int nindex) {
         if (nindex < 0 || nindex > nUpperLayerCount || nUpperLayerCount < 0)
             return null;
         return p_aUpperLayer.get(nindex);
     }
 
     @Override
-    public void SetUpperUnderLayer(BaseLayer pUULayer) {
-        this.SetUpperLayer(pUULayer);
-        pUULayer.SetUnderLayer(this);
+    public void setUpperUnderLayer(BaseLayer pUULayer) {
+        this.setUpperLayer(pUULayer);
+        pUULayer.setUnderLayer(this);
     }
 }

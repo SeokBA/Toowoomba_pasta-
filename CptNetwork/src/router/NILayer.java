@@ -1,4 +1,4 @@
-package Router;
+package router;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,46 +11,47 @@ import org.jnetpcap.packet.PcapPacket;
 import org.jnetpcap.packet.PcapPacketHandler;
 
 public class NILayer implements BaseLayer{
-	public int nUnderLayerCount=0;
-	public int nUpperLayerCount=0;
-	public String pLayerName=null;
-	public BaseLayer p_UnderLayer=null;
-	public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<BaseLayer>();
-	public ArrayList<BaseLayer> p_aUpperLayer=new ArrayList<BaseLayer>();
-	
-	int m_iNumAdapter;
-	public Pcap m_AdapterObject;
+	private int nUnderLayerCount = 0;
+	private int nUpperLayerCount = 0;
+	private String pLayerName = null;
+	private BaseLayer p_UnderLayer = null;
+	private ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
+	private ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
+
+	private int m_iNumAdapter;
+	private Pcap m_AdapterObject;
 	public PcapIf device;
 	public List<PcapIf> m_pAdapterList;
-	StringBuilder errbuf = new StringBuilder();
+	private StringBuilder errbuf = new StringBuilder();
 	
 	public NILayer(String pName) {
 		pLayerName=pName;
 		m_pAdapterList=new ArrayList<PcapIf>();
 		m_iNumAdapter=0;
-		SetAdapterList();
+		setAdapterList();
 	}
-	
-	public void PacketStartDriver() {
+
+	private void packetStartDriver() {
 		int snaplen=64*1024;
 		int flags=Pcap.MODE_PROMISCUOUS;
 		int timeout=3*1000; // 10*1000;
 		m_AdapterObject=Pcap.openLive(m_pAdapterList.get(m_iNumAdapter).getName(), snaplen, flags, timeout, errbuf);
 	}
-	public void SetAdapterNumber(int iNum) {
+	public void setAdapterNumber(int iNum) {
 		m_iNumAdapter = iNum;
-		PacketStartDriver();
-		Receive();
+		packetStartDriver();
+		receive();
 	}
-	
-	public void SetAdapterList() {
+
+	private void setAdapterList() {
+		System.out.println(m_AdapterObject);
 		int r=Pcap.findAllDevs(m_pAdapterList, errbuf);
 		if(r==Pcap.NOT_OK || m_pAdapterList.isEmpty()) {
 			System.out.printf("Can't read list of devices, error is %s",errbuf.toString());
 		}
 	}
 
-	public List<String> GetAdapterList(){
+	public List<String> getAdapterList(){
 		List list=new ArrayList<String>();
 		for(int i=0; i<m_pAdapterList.size(); i++){
 			list.add(m_pAdapterList.get(i).getDescription());
@@ -58,22 +59,26 @@ public class NILayer implements BaseLayer{
 		return list;
 	}
 
-	public byte[] GetMacAddress(int i) throws IOException {
+	public byte[] getMacAddress(int i) throws IOException {
 		return m_pAdapterList.get(i).getHardwareAddress();
 	}
 
-	public String GetDescription(int i){
+	public byte[] getIpAddress(int i) { // getAddress해서 가져온 리스트 중 IPv4가 0번째에 위치함
+		return m_pAdapterList.get(i).getAddresses().get(0).getAddr().getData();
+	}
+
+	public String getDescription(int i){
 		return m_pAdapterList.get(i).getDescription();
 	}
 
-	public boolean Receive() {
-		Receive_Thread thread = new Receive_Thread(m_AdapterObject, this.GetUpperLayer(0));
+	public boolean receive() {
+		Receive_Thread thread = new Receive_Thread(m_AdapterObject, this.getUpperLayer(0));
 		Thread obj=new Thread(thread);
 		obj.start();
 		return false;
 	}
 	
-	public boolean Send(byte[] input, int length) {
+	public boolean send(byte[] input, int length) {
 		ByteBuffer buf=ByteBuffer.wrap(input);
 		if(m_AdapterObject.sendPacket(buf)!=Pcap.OK) {
 			System.err.println(m_AdapterObject.getErr());
@@ -83,72 +88,67 @@ public class NILayer implements BaseLayer{
 	}
 	
 	@Override
-	public String GetLayerName() {
-		// TODO Auto-generated method stub
+	public String getLayerName() {
 		return pLayerName;
 	}
 
 	@Override
-	public BaseLayer GetUnderLayer(int nindex) {
+	public BaseLayer getUnderLayer(int nindex) {
 		if (nindex < 0 || nindex > nUnderLayerCount || nUnderLayerCount < 0)
 			return null;
 		return p_aUnderLayer.get(nindex);
 	}
 
 	@Override
-	public BaseLayer GetUpperLayer(int nindex) {
-		// TODO Auto-generated method stub
+	public BaseLayer getUpperLayer(int nindex) {
 		if (nindex < 0 || nindex > nUpperLayerCount || nUpperLayerCount < 0)
 			return null;
 		return p_aUpperLayer.get(nindex);
 	}
 
 	@Override
-	public void SetUnderLayer(BaseLayer pUnderLayer) {
-		// TODO Auto-generated method stub
+	public void setUnderLayer(BaseLayer pUnderLayer) {
 		if (pUnderLayer == null)
 			return;
-		this.p_UnderLayer = pUnderLayer;
+		this.p_aUnderLayer.add(nUnderLayerCount++, pUnderLayer);
 	}
 
 	@Override
-	public void SetUpperLayer(BaseLayer pUpperLayer) {
-		// TODO Auto-generated method stub
+	public void setUpperLayer(BaseLayer pUpperLayer) {
 		if (pUpperLayer == null)
 			return;
 		this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);
-		// nUpperLayerCount++;
 	}
 
 	@Override
-	public void SetUpperUnderLayer(BaseLayer pUULayer) {
-		this.SetUpperLayer(pUULayer);
-		pUULayer.SetUnderLayer(this);
+	public void setUpperUnderLayer(BaseLayer pUULayer) {
+		this.setUpperLayer(pUULayer);
+		pUULayer.setUnderLayer(this);
 	}	
 }
 
 
 class Receive_Thread implements Runnable {
     byte[] data;
-    Pcap AdapterObject;
-    BaseLayer UpperLayer;
+	private Pcap adapterObject;
+	private BaseLayer upperLayer;
     public Receive_Thread(Pcap m_AdapterObject, BaseLayer m_UpperLayer) {
-    	AdapterObject = m_AdapterObject;
-    	UpperLayer = m_UpperLayer;
+    	adapterObject = m_AdapterObject;
+    	upperLayer = m_UpperLayer;
     }
 
     @Override
     public void run() {
+		//System.out.println("running!");
         while (true) {
         	PcapPacketHandler<String> jpacketHandler = new PcapPacketHandler<String>() {
 				@Override
 				public void nextPacket(PcapPacket packet, String user) {
 					data=packet.getByteArray(0, packet.size());
-					UpperLayer.Receive(data);
+					upperLayer.receive(data);
 				}
         	};
-        	
-        	AdapterObject.loop(100000, jpacketHandler, "");
+        	adapterObject.loop(100000, jpacketHandler, "");
         }
     }
 }

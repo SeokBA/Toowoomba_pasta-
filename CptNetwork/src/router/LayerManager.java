@@ -1,29 +1,22 @@
-package Router;
-
+package router;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 public class LayerManager {
-
     private class _NODE {
         private String token;
         private _NODE next;
-
-        public _NODE(String input) {
+        private  _NODE(String input) {
             this.token = input;
             this.next = null;
         }
     }
-
-    _NODE mp_sListHead;
-    _NODE mp_sListTail;
-
+    private _NODE mp_sListHead;
+    private _NODE mp_sListTail;
     private int m_nTop;
     private int m_nLayerCount;
-
-    private ArrayList<BaseLayer> mp_Stack = new ArrayList<BaseLayer>();
-    private ArrayList<BaseLayer> mp_aLayers = new ArrayList<BaseLayer>(); // 어레이 리스트에 추가
-
+    private ArrayList<BaseLayer> mp_Stack = new ArrayList<>();
+    private ArrayList<BaseLayer> mp_aLayers = new ArrayList<>();
 
     public LayerManager() {
         m_nLayerCount = 0;
@@ -32,46 +25,42 @@ public class LayerManager {
         m_nTop = -1;
     }
 
-    public void AddLayer(BaseLayer pLayer) {
+    public void addLayer(BaseLayer pLayer) {
         mp_aLayers.add(m_nLayerCount++, pLayer);
-        //m_nLayerCount++;
     }
 
 
-    public BaseLayer GetLayer(int nindex) {
+    public BaseLayer getLayer(int nindex) {
         return mp_aLayers.get(nindex);
     }
 
-    public BaseLayer GetLayer(String pName) {
+    public BaseLayer getLayer(String pName) {
         for (int i = 0; i < m_nLayerCount; i++) {
-            if (pName.compareTo(mp_aLayers.get(i).GetLayerName()) == 0)
+            if (pName.compareTo(mp_aLayers.get(i).getLayerName()) == 0)
                 return mp_aLayers.get(i);
         }
         return null;
     }
 
-    public void ConnectLayers(String pcList) {
-        MakeList(pcList);
-        LinkLayer(mp_sListHead);
+    public void connectLayers(String pcList) {
+        makeList(pcList);
+        linkLayer(mp_sListHead);
     }
 
-    private void MakeList(String pcList) {
+    private void makeList(String pcList) {
         StringTokenizer tokens = new StringTokenizer(pcList, " ");
-
         for (; tokens.hasMoreElements(); ) {
-            _NODE pNode = AllocNode(tokens.nextToken());
-            AddNode(pNode);
-
+            _NODE pNode = allocNode(tokens.nextToken());
+            addNode(pNode);
         }
     }
 
-    private _NODE AllocNode(String pcName) {
+    private _NODE allocNode(String pcName) {
         _NODE node = new _NODE(pcName);
-
         return node;
     }
 
-    private void AddNode(_NODE pNode) {
+    private void addNode(_NODE pNode) {
         if (mp_sListHead == null) {
             mp_sListHead = mp_sListTail = pNode;
         } else {
@@ -80,13 +69,11 @@ public class LayerManager {
         }
     }
 
-    private void Push(BaseLayer pLayer) {
+    private void push(BaseLayer pLayer) {
         mp_Stack.add(++m_nTop, pLayer);
-        //mp_Stack.add(pLayer);
-        //m_nTop++;
     }
 
-    private BaseLayer Pop() {
+    private BaseLayer pop() {
         BaseLayer pLayer = mp_Stack.get(m_nTop);
         mp_Stack.remove(m_nTop);
         m_nTop--;
@@ -94,47 +81,38 @@ public class LayerManager {
         return pLayer;
     }
 
-    private BaseLayer Top() {
+    private BaseLayer top() {
         return mp_Stack.get(m_nTop);
     }
 
-    private void LinkLayer(_NODE pNode) {
+    private void linkLayer(_NODE pNode) {
         BaseLayer pLayer = null;
-
         while (pNode != null) {
             if (pLayer == null)
-                pLayer = GetLayer(pNode.token);
+                pLayer = getLayer(pNode.token);
             else {
                 if (pNode.token.equals("("))
-                    Push(pLayer);
+                    push(pLayer);
                 else if (pNode.token.equals(")"))
-                    Pop();
+                    pop();
                 else {
                     char cMode = pNode.token.charAt(0);
-                    String pcName = pNode.token.substring(1, pNode.token.length());
-
-                    pLayer = GetLayer(pcName);
-
+                    String pcName = pNode.token.substring(1);
+                    pLayer = getLayer(pcName);
                     switch (cMode) {
                         case '*':
-                            Top().SetUpperUnderLayer(pLayer);
+                            top().setUpperUnderLayer(pLayer);
                             break;
                         case '+':
-                            Top().SetUpperLayer(pLayer);
-                            //System.out.println(Top());
-                            //System.out.println(pLayer);
+                            top().setUpperLayer(pLayer);
                             break;
                         case '-':
-                            Top().SetUnderLayer(pLayer);
+                            top().setUnderLayer(pLayer);
                             break;
                     }
                 }
             }
-
             pNode = pNode.next;
-
         }
     }
-
-
 }
