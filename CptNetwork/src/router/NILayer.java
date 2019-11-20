@@ -26,7 +26,7 @@ public class NILayer implements BaseLayer{
 	
 	public NILayer(String pName) {
 		pLayerName=pName;
-		m_pAdapterList=new ArrayList<PcapIf>();
+		m_pAdapterList= new ArrayList<>();
 		m_iNumAdapter=0;
 		setAdapterList();
 	}
@@ -44,7 +44,6 @@ public class NILayer implements BaseLayer{
 	}
 
 	private void setAdapterList() {
-		System.out.println(m_AdapterObject);
 		int r=Pcap.findAllDevs(m_pAdapterList, errbuf);
 		if(r==Pcap.NOT_OK || m_pAdapterList.isEmpty()) {
 			System.out.printf("Can't read list of devices, error is %s",errbuf.toString());
@@ -139,15 +138,11 @@ class Receive_Thread implements Runnable {
 
     @Override
     public void run() {
-		//System.out.println("running!");
         while (true) {
-        	PcapPacketHandler<String> jpacketHandler = new PcapPacketHandler<String>() {
-				@Override
-				public void nextPacket(PcapPacket packet, String user) {
-					data=packet.getByteArray(0, packet.size());
-					upperLayer.receive(data);
-				}
-        	};
+        	PcapPacketHandler<String> jpacketHandler = (packet, user) -> {
+				data=packet.getByteArray(0, packet.size());
+				upperLayer.receive(data);
+			};
         	adapterObject.loop(100000, jpacketHandler, "");
         }
     }

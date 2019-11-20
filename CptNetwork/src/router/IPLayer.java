@@ -26,27 +26,27 @@ public class IPLayer implements BaseLayer{
     }
 
     private class _IP_HEADER{
-        byte ipVersion; // 1byte
-        byte ipType; // 1byte
-        byte[] ipLength; // 2byte 4
+        byte ipVerLen; // 1byte
+        byte ipTos; // 1byte
+        byte[] ipLen; // 2byte 4
         byte[] ipId; // 2byte 6
         byte[] ipFragOff; // 2byte 8
         byte ipTtl;
         byte ipProto;
-        byte ipCheckSum;
+        byte ipCksum;
         _IP_ADDR ipSrc;
         _IP_ADDR ipDst;
         byte[] ipData;
 
         public _IP_HEADER() {
-            this.ipVersion=0x00;
-            this.ipType=0x00;
-            this.ipLength=new byte[2];
+            this.ipVerLen =0x00;
+            this.ipTos =0x00;
+            this.ipLen =new byte[2];
             this.ipId=new byte[2];
             this.ipFragOff=new byte[2];
             this.ipTtl=0x00;
             this.ipProto=0x00;
-            this.ipCheckSum=0x00;
+            this.ipCksum =0x00;
             this.ipSrc = new _IP_ADDR();
             this.ipDst = new _IP_ADDR();
             this.ipData=null;
@@ -99,17 +99,17 @@ public class IPLayer implements BaseLayer{
 
     public byte[] objToByte(_IP_HEADER Header, byte[] input, int length) {
         byte[] buf = new byte[length + 19];
-        buf[0]=Header.ipVersion;
-        buf[1]=Header.ipType;
+        buf[0]=Header.ipVerLen;
+        buf[1]=Header.ipTos;
         for(int i=2; i<4; i++)
-            buf[i] = Header.ipLength[i-2];
+            buf[i] = Header.ipLen[i-2];
         for(int i=4; i<6; i++)
             buf[i] = Header.ipId[i-4];
         for(int i=6; i<8; i++)
             buf[i] = Header.ipFragOff[i-6];
         buf[8]=Header.ipTtl;
         buf[9]=Header.ipProto;
-        buf[10]=Header.ipCheckSum;
+        buf[10]=Header.ipCksum;
         for(int i=11; i<15; i++)
             buf[i] = Header.ipSrc.addr[i-11];
         for(int i=15; i<19; i++)
