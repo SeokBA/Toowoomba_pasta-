@@ -80,36 +80,12 @@ public class ARPDlg extends JFrame implements BaseLayer {
         m_LayerMgr.addLayer(new NILayer("NI"));
         m_LayerMgr.addLayer(new EthernetLayer("EtherNet"));
         m_LayerMgr.addLayer(new IPLayer("IP"));
-//        m_LayerMgr.addLayer(new TCPLayer("TCP"));
-//        m_LayerMgr.addLayer(new ApplicationLayer("Application"));
         m_LayerMgr.addLayer(new ARPLayer("ARP"));
         m_LayerMgr.addLayer(new ARPDlg("GUI"));
-//        m_LayerMgr.connectLayers("NI ( *EtherNet ( *IP ( *TCP ( *Application ( *GUI ) ) ) ) *EtherNet ( *ARP ( *GUI ) *ARP ( *IP ) ) )");
-
-//        m_LayerMgr.connectLayers("NI ( *EtherNet ( *IP ( *TCP ( *Application ( *GUI ) ) ) ) *EtherNet ( *ARP ( *GUI ) *ARP ( *IP ) ) )");
         m_LayerMgr.connectLayers("NI ( *EtherNet ( *IP ( *GUI ) ) *EtherNet ( *ARP ( *GUI ) *ARP ( *IP ) ) )");
-
-        System.out.println(m_LayerMgr.getLayer("NI").getUpperLayer(0));
-        System.out.println(m_LayerMgr.getLayer("EtherNet").getUpperLayer(0));
-        System.out.println(m_LayerMgr.getLayer("EtherNet").getUpperLayer(1));
-        System.out.println(m_LayerMgr.getLayer("EtherNet").getUnderLayer(0));
-        System.out.println(m_LayerMgr.getLayer("IP").getUnderLayer(1)); // ip레이어의 under1번이 arp
-        System.out.println(m_LayerMgr.getLayer("IP").getUnderLayer(0));
-        System.out.println(m_LayerMgr.getLayer("ARP").getUnderLayer(0));
-        System.out.println("dd"+m_LayerMgr.getLayer("ARP").getUpperLayer(0));
-        System.out.println("dd"+m_LayerMgr.getLayer("ARP").getUpperLayer(1));
-
-        System.out.println(m_LayerMgr.getLayer("GUI").getUnderLayer(0));
-        System.out.println(m_LayerMgr.getLayer("EtherNet").getUnderLayer(0));
-        System.out.println(m_LayerMgr.getLayer("IP").getUnderLayer(0));
-//        System.out.println(m_LayerMgr.getLayer("TCP").getUnderLayer(0));
-
-        System.out.println(m_LayerMgr.getLayer("GUI").getUnderLayer(0));
-        System.out.println(m_LayerMgr.getLayer("NI").getUpperLayer(0));
-        System.out.println(m_LayerMgr.getLayer("NI").getUpperLayer(0));
     }
 
-    public ARPDlg(String pName) throws UnsupportedEncodingException {
+    public ARPDlg(String pName) {
         tools =new Tools();
         pLayerName = pName;
         proxyArpEntry=ProxyARPTable.getInstance().getProxyArpEntry();
@@ -445,7 +421,6 @@ public class ARPDlg extends JFrame implements BaseLayer {
                 String selectedItem=proxyModel.get(index).toString();
                 // 키가 Host A,B,C,D 무조건 이렇게 생겼다고 가정
                 String hostID=selectedItem.substring(0,6);
-                System.out.println(hostID);
                 proxyArpEntry.remove(hostID);
                 proxyModel.remove(index);
             }
@@ -522,8 +497,7 @@ public class ARPDlg extends JFrame implements BaseLayer {
     }
 
     public boolean receive(byte[] input) {
-        String s;
-        s = new String(input);
+        String s = new String(input);
         return true;
     }
 
@@ -544,7 +518,6 @@ public class ARPDlg extends JFrame implements BaseLayer {
         if (pUpperLayer == null)
             return;
         this.p_aUpperLayer.add(nUpperLayerCount++, pUpperLayer);
-        // nUpperLayerCount++;
     }
 
     @Override
