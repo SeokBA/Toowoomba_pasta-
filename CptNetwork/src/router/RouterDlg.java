@@ -251,7 +251,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
     }
 
     class setMouseListener implements MouseListener {
-        PopupSelectNICDlg popupSelectNICDlg = new PopupSelectNICDlg((NILayer) m_LayerMgr.getLayer("NI_L"));
+        PopupSelectNICDlg popupSelectNICDlg = new PopupSelectNICDlg(new NILayer("NI"));
 
         @Override
         public void mouseClicked(MouseEvent e) {
