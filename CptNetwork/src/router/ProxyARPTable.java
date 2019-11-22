@@ -21,14 +21,10 @@ public class ProxyARPTable {
         return proxyArpTable;
     }
 
-    public String[][] getStringArray(){
-        return null;
-    }
-
     public boolean isInProxyArpEntry(String hostIpAddr) {
         boolean state;
         for (Map.Entry<String, ProxyARPRecord> entry : proxyArpTable.entrySet()) {
-            if (entry.getValue().hostIpAddr.equals(hostIpAddr)) {
+            if (entry.getValue().ipAddr.equals(hostIpAddr)) {
                 return true;
             }
         }
@@ -37,24 +33,42 @@ public class ProxyARPTable {
 
     public String getMacAddr(String hostID) {
         for (Map.Entry<String, ProxyARPRecord> entry : proxyArpTable.entrySet()) {
-            if (entry.getValue().hostIpAddr.equals(hostID)) {
-                return entry.getValue().routerMacAddr;
+            if (entry.getValue().ipAddr.equals(hostID)) {
+                return entry.getValue().hwAddr;
             }
         }
         return null;
     }
+
+    public String[][] getStringArray(){
+        String[][] arr = new String[proxyArpTable.size()][];
+        int idx = 0;
+        for(String i:proxyArpTable.keySet()){
+            arr[idx] = proxyArpTable.get(i).getStringArray();
+            idx++;
+        }
+        return arr;
+    }
 }
 
 class ProxyARPRecord {
-    String hostIpAddr;
-    String routerMacAddr;
+    String ipAddr;
+    String hwAddr;
+    String interfaceNum;
 
-    public ProxyARPRecord(String hostIpAddr, String routerMacAddr) {
-        this.hostIpAddr = hostIpAddr;
-        this.routerMacAddr = routerMacAddr;
+    public ProxyARPRecord(String ipAddr, String hwAddr) {
+        this.ipAddr = ipAddr;
+        this.hwAddr = hwAddr;
+        this.interfaceNum = "?";
+    }
+
+    public ProxyARPRecord(String ipAddr, String hwAddr, String interfaceNum) {
+        this.ipAddr = ipAddr;
+        this.hwAddr = hwAddr;
+        this.interfaceNum = interfaceNum;
     }
 
     public String[] getStringArray(){
-        return null;
+        return new String[]{ipAddr, hwAddr, interfaceNum};
     }
 }

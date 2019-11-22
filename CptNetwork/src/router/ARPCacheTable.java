@@ -19,16 +19,24 @@ public class ARPCacheTable {
     }
 
     public String[][] getStringArray(){
-        return null;
+        String[][] arr = new String[arpCacheTable.size()][];
+        int idx = 0;
+        for(String i:arpCacheTable.keySet()){
+            arr[idx] = arpCacheTable.get(i).getStringArray();
+            idx++;
+        }
+        return arr;
     }
 }
 
 class ARPCacheRecord{
-    String hardwareAddr;
+    String ipAddr;
+    String hwAddr;
     String status;
 
-    public ARPCacheRecord(String hardwareAddr, String status) {
-        this.hardwareAddr = hardwareAddr;
+    public ARPCacheRecord(String ipAddr, String hwAddr, String status) {
+        this.ipAddr = ipAddr;
+        this.hwAddr = hwAddr;
         this.status = status;
     }
 
@@ -37,6 +45,6 @@ class ARPCacheRecord{
     }
 
     public String[] getStringArray(){
-        return null;
+        return new String[]{ipAddr, hwAddr, status};
     }
 }

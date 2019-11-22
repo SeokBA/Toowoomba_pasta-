@@ -3,6 +3,21 @@ package router;
 import java.io.UnsupportedEncodingException;
 
 public class Tools {
+    public String setFlag(String flag){
+        String flagTemp = "";
+        if(flag.contains("U"))
+            flagTemp += "U";
+        if(flag.contains("G"))
+            flagTemp += "G";
+        if(flag.contains("H"))
+            flagTemp += "H";
+        if(flag.contains("D"))
+            flagTemp += "D";
+        if(flag.contains("M"))
+            flagTemp += "M";
+        return flagTemp;
+    }
+
     byte[] intToByte2(int value) {
         byte[] temp = new byte[2];
         temp[1] = (byte) (value >> 8);

@@ -38,28 +38,15 @@ class RoutingRecord {
     private int interfaceNum;
     private int metric;
 
+    private Tools tools = new Tools();
+
     public RoutingRecord(String dstAddr, String netmask, String gateway, String flag, int interfaceNum, int metric) {
         this.dstAddr = dstAddr;
         this.netmask = netmask;
         this.gateway = gateway;
         this.metric = metric;
-        this.flag = setFlag(flag);
+        this.flag = tools.setFlag(flag);
         this.interfaceNum = interfaceNum;
-    }
-
-    public String setFlag(String flag){
-        String flagTemp = "";
-        if(flag.contains("U"))
-            flagTemp += "U";
-        if(flag.contains("G"))
-            flagTemp += "G";
-        if(flag.contains("H"))
-            flagTemp += "H";
-        if(flag.contains("D"))
-            flagTemp += "D";
-        if(flag.contains("M"))
-            flagTemp += "M";
-        return flagTemp;
     }
 
     public String[] getStringArray(){

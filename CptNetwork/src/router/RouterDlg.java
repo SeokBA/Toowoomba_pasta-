@@ -29,7 +29,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
     private static LayerManager m_LayerMgr = new LayerManager();
 
     String[] routingHeader = {"Destination", "NetMask", "Gateway", "Flag", "Interface", "Metric"};
-    String[] arpHeader = {"IP Address", "Ethernet Address", "Interface", "Flag"};
+    String[] arpHeader = {"IP Address", "Ethernet Address", "Status"};
     String[] proxyHeader = {"IP Address", "Ethernet Address", "Interface"};
     String[][] routingTableStr = {};
     String[][] arpTableStr = {};

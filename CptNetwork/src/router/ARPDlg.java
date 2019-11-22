@@ -427,7 +427,7 @@ public class ARPDlg extends JFrame implements BaseLayer {
             if (e.getSource() == btnIpSend) { // Pushed "Send" button in ARP Cache Panel
                 cacheTable=ARPCacheTable.getInstance().getTable();
                 String findIP=tfIPAdr.getText();
-                cacheTable.put(findIP,new ARPCacheRecord("????????", "Incomplete"));
+                cacheTable.put(findIP,new ARPCacheRecord(findIP, "????????", "Incomplete"));
                 updateCacheTable();
                 ((EthernetLayer) m_LayerMgr.getLayer("EtherNet")).setEnetSrcAddress(selectedHWAddr);
                 ((ARPLayer) m_LayerMgr.getLayer("ARP")).setSrcHWAddress(selectedHWAddr);
@@ -460,7 +460,7 @@ public class ARPDlg extends JFrame implements BaseLayer {
     public void updateProxyArpEntry(){
         cacheTable=ARPCacheTable.getInstance().getTable();
         proxyModel.clear();
-        proxyArpEntry.forEach((k,v) -> proxyModel.addElement(k+"  "+v.hostIpAddr+"  "+v.routerMacAddr+""));
+        proxyArpEntry.forEach((k,v) -> proxyModel.addElement(k+"  "+v.ipAddr +"  "+v.hwAddr +""));
     }
 
     public String hwAddrByte2String(byte[] addr){
@@ -503,7 +503,7 @@ public class ARPDlg extends JFrame implements BaseLayer {
 
     public void updateCacheTable(){
         ARPModel.clear();
-        cacheTable.forEach((k,v) -> ARPModel.addElement(k+"  "+v.hardwareAddr+"  "+v.status+""));
+        cacheTable.forEach((k,v) -> ARPModel.addElement(k+"  "+v.hwAddr +"  "+v.status+""));
     }
 
     @Override
