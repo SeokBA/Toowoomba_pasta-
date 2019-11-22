@@ -75,13 +75,20 @@ public class RouterDlg extends JFrame implements BaseLayer {
     PopupRoutingAdderDlg popupRoutingAdderDlg;
 
     public static void main(String[] args) {
+        m_LayerMgr.addLayer(new NILayer("NI_L"));
+        m_LayerMgr.addLayer(new EthernetLayer("EtherNet_L"));
+        m_LayerMgr.addLayer(new IPLayer("IP_L"));
+        m_LayerMgr.addLayer(new ARPLayer("ARP_L"));
+
+
+        m_LayerMgr.addLayer(new NILayer("NI_R"));
+        m_LayerMgr.addLayer(new EthernetLayer("EtherNet_R"));
+        m_LayerMgr.addLayer(new IPLayer("IP_R"));
+        m_LayerMgr.addLayer(new ARPLayer("ARP_R"));
+
         m_LayerMgr.addLayer(new RouterDlg("GUI"));
-        Tools.setGUILayer((RouterDlg) m_LayerMgr.getLayer("GUI"));
-        m_LayerMgr.addLayer(new NILayer("NI"));
-        m_LayerMgr.addLayer(new EthernetLayer("EtherNet"));
-        m_LayerMgr.addLayer(new IPLayer("IP"));
-        m_LayerMgr.addLayer(new ARPLayer("ARP"));
-        m_LayerMgr.connectLayers("NI ( *EtherNet ( *IP ( *GUI ) ) *EtherNet ( *ARP ( *GUI ) *ARP ( *IP ) ) )");
+
+        m_LayerMgr.connectLayers("GUI ( +NI_L ( *EtherNet_L ( *IP_L ( *GUI ) ) *EtherNet_L ( *ARP_L ( *GUI ) *ARP_L ( *IP_L ) ) ) +NI_R ( *EtherNet_R ( *IP_R ( *GUI ) ) *EtherNet_R ( *ARP_R ( *GUI ) *ARP_R ( *IP_R ) ) ) )");
     }
 
     public RouterDlg(String pName) {

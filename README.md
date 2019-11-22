@@ -7,7 +7,7 @@
   - 김석호 : 주소 계산 등의 method를 Tool class에 정리, 차후에 layer에서 공통적으로 사용가능한 method는 Tool class 에 넣는 것을 권장.
 
 ## - 2019.11.19
-  - 김석호 : ARPLayer는 정리 중, 나머지는 대부분 정리완료 => 정리 완료
+  - 김석호 : ARPLayer는 정리 중, 나머지는 대부분 정리완료
 ## - 2019.11.20
   - 김종운 :
       * 파스칼 표기법이랑 섞어있던 메소드와 변수 -> 카멜 표기법으로 통일  
@@ -19,7 +19,9 @@
 ## - 2019.11.21
   - 김석호 : interface_0, 1 select label popup 관련 기능들과 Static Routine Table add 기능 구현
 ## - 2019.11.22
-  - 김종운 : 수정사항 merge, update (RoutingTable HashMap -> ArrayList 변경 )
+  - 김종운 : 수정사항 merge, update
   - 김석호 : 
       * updateARPTable, updateProxyTable 메소드 구현 (Tools로 이동, 싱글톤), update method들을 사용하기 위한 코드 변경  
-      * btnRoutingDelete 구현
+      * routerTable의 Delete 구현
+  - 최수민 :
+      * RouterDlg : 레이어 연결 수정
