@@ -22,14 +22,16 @@ public class RouterDlg extends JFrame implements BaseLayer {
     public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
     BaseLayer UnderLayer;
 
-    RoutingTable routingTable = new RoutingTable();
-    ARPCacheTable arpCacheTable = new ARPCacheTable();
-    ProxyARPTable proxyArpTable = new ProxyARPTable();
+    private Tools tools = new Tools();
+
+    private RoutingTable routingTable = Tools.getRoutingTable();
+    private ARPCacheTable arpCacheTable = Tools.getARPCacheTable();
+    private ProxyARPTable proxyArpTable = Tools.getProxyARPTable();
 
     private static LayerManager m_LayerMgr = new LayerManager();
 
     String[] routingHeader = {"Destination", "NetMask", "Gateway", "Flag", "Interface", "Metric"};
-    String[] arpHeader = {"IP Address", "Ethernet Address", "Status"};
+    String[] arpHeader = {"IP Address", "Ethernet Address", "Interface", "Flag"};
     String[] proxyHeader = {"IP Address", "Ethernet Address", "Interface"};
     String[][] routingTableStr = {};
     String[][] arpTableStr = {};
@@ -72,14 +74,13 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
     PopupRoutingAdderDlg popupRoutingAdderDlg;
 
-    Tools tools = new Tools();
-
     public static void main(String[] args) {
+        m_LayerMgr.addLayer(new RouterDlg("GUI"));
+        Tools.setGUILayer((RouterDlg) m_LayerMgr.getLayer("GUI"));
         m_LayerMgr.addLayer(new NILayer("NI"));
         m_LayerMgr.addLayer(new EthernetLayer("EtherNet"));
         m_LayerMgr.addLayer(new IPLayer("IP"));
         m_LayerMgr.addLayer(new ARPLayer("ARP"));
-        m_LayerMgr.addLayer(new RouterDlg("GUI"));
         m_LayerMgr.connectLayers("NI ( *EtherNet ( *IP ( *GUI ) ) *EtherNet ( *ARP ( *GUI ) *ARP ( *IP ) ) )");
     }
 
@@ -220,7 +221,14 @@ public class RouterDlg extends JFrame implements BaseLayer {
                 popupRoutingAdderDlg.popup();
             }
             if (e.getSource() == btnRoutingDelete) { // routing delete
-
+                int selectRow = routingArea.getSelectedRow();
+                if(selectRow == -1){
+                    JOptionPane.showMessageDialog(null, "Select a table item to delete.");
+                }
+                else{
+                    routingTable.getTable().remove(selectRow);
+                    tools.updateRoutingTable();
+                }
             }
             if (e.getSource() == btnARPDelete) { // arp delete
 
@@ -479,6 +487,13 @@ public class RouterDlg extends JFrame implements BaseLayer {
         }
 
         public void popup() {
+            tfDestination.setText("");
+            tfNetmask.setText("");
+            tfGateway.setText("");
+            chkUpFlag.setSelected(false);
+            chkGatewayFlag.setSelected(false);
+            chkHostFlag.setSelected(false);
+            addInterfaceComboBox.setSelectedIndex(0);
             setVisible(true);
         }
 
@@ -498,10 +513,8 @@ public class RouterDlg extends JFrame implements BaseLayer {
                         flag += "H";
                     int interface_num = addInterfaceComboBox.getSelectedIndex();
                     int metric = 1;
-//                    routingTable.getTable().put(dstIPAddr, new RoutingRecord(dstIPAddr, netMask, gateWay, flag, interface_num, metric));
-                    // todo 얘도 수정 필요한 듯
                     routingTable.getTable().add(new RoutingRecord(dstIPAddr, netMask, gateWay, flag, interface_num, metric));
-                    updateRoutingTable();
+                    tools.updateRoutingTable();
                     setVisible(false);
                 }
 
@@ -516,37 +529,6 @@ public class RouterDlg extends JFrame implements BaseLayer {
         String s;
         s = new String(input);
         return true;
-    }
-
-    public void updateRoutingTable() {
-        // todo 우선 주석 Map to List 필요
-//        routingTableStr = routingTable.getStringArray();
-//        while (routineModel.getRowCount() > 0)
-//            routineModel.removeRow(0);
-//        for (String[] i:routingTableStr)
-//            routineModel.addRow(i);
-    }
-
-    public void updateARPTable() {
-        arpTableStr = arpCacheTable.getStringArray();
-        while (arpModel.getRowCount() > 0)
-            arpModel.removeRow(0);
-        for (String[] i:arpTableStr)
-            arpModel.addRow(i);
-    }
-
-    public void updateProxyTable() {
-        proxyTableStr = proxyArpTable.getStringArray();
-        while (proxyModel.getRowCount() > 0)
-            proxyModel.removeRow(0);
-        for (String[] i:proxyTableStr)
-            proxyModel.addRow(i);
-    }
-
-    // IP 충돌시 메세지 뜨게함
-    public void IPCrash() {
-        String msg = "IP주소 충돌이 발생하였습니다.";
-        JOptionPane.showMessageDialog(null, msg);
     }
 
     @Override

@@ -1,21 +1,60 @@
 package router;
 
+import javax.swing.*;
 import java.io.UnsupportedEncodingException;
 
 public class Tools {
-    public String setFlag(String flag){
-        String flagTemp = "";
-        if(flag.contains("U"))
-            flagTemp += "U";
-        if(flag.contains("G"))
-            flagTemp += "G";
-        if(flag.contains("H"))
-            flagTemp += "H";
-        if(flag.contains("D"))
-            flagTemp += "D";
-        if(flag.contains("M"))
-            flagTemp += "M";
-        return flagTemp;
+    private static final RoutingTable routingTable = new RoutingTable();
+    private static final ARPCacheTable arpCacheTable = new ARPCacheTable();
+    private static final ProxyARPTable proxyArpTable = new ProxyARPTable();
+    private static RouterDlg guiLayer;
+
+    public static void setGUILayer(RouterDlg guiLayer) {
+        Tools.guiLayer = guiLayer;
+    }
+
+    public static RouterDlg getGUILayer() {
+        return Tools.guiLayer;
+    }
+
+    public static RoutingTable getRoutingTable(){
+        return routingTable;
+    }
+    public static ARPCacheTable getARPCacheTable(){
+        return arpCacheTable;
+    }
+    public static ProxyARPTable getProxyARPTable(){
+        return proxyArpTable;
+    }
+
+    public void updateRoutingTable() {
+        Tools.guiLayer.routingTableStr = routingTable.getStringArray();
+        while (Tools.guiLayer.routineModel.getRowCount() > 0)
+            Tools.guiLayer.routineModel.removeRow(0);
+        for (String[] i:Tools.guiLayer.routingTableStr)
+            Tools.guiLayer.routineModel.addRow(i);
+    }
+
+    public void updateARPTable() {
+        Tools.guiLayer.arpTableStr = arpCacheTable.getStringArray();
+        while (Tools.guiLayer.arpModel.getRowCount() > 0)
+            Tools.guiLayer.arpModel.removeRow(0);
+        for (String[] i:Tools.guiLayer.arpTableStr)
+            Tools.guiLayer.arpModel.addRow(i);
+    }
+
+    public void updateProxyTable() {
+        Tools.guiLayer.proxyTableStr = proxyArpTable.getStringArray();
+        while (Tools.guiLayer.proxyModel.getRowCount() > 0)
+            Tools.guiLayer.proxyModel.removeRow(0);
+        for (String[] i:Tools.guiLayer.proxyTableStr)
+            Tools.guiLayer.proxyModel.addRow(i);
+    }
+
+    // IP 충돌시 메세지 뜨게함
+    public void IPCrash() {
+        String msg = "IP주소 충돌이 발생하였습니다.";
+        JOptionPane.showMessageDialog(null, msg);
     }
 
     byte[] intToByte2(int value) {
@@ -55,7 +94,7 @@ public class Tools {
         return sb.toString();
     }
 
-    String hwAddrByteToString(byte[] addr, char s) {
+    public String hwAddrByteToString(byte[] addr, char s) {
         StringBuilder sb = new StringBuilder();
         int temp = 0;
         for (int j = 0; j < addr.length; j++) {
@@ -98,7 +137,7 @@ public class Tools {
         return addr;
     }
 
-    String byteHWAddrToString(byte[] addr) {
+    public String byteHWAddrToString(byte[] addr) {
         StringBuilder sb = new StringBuilder();
         int temp = 0;
         for (int j = 0; j < addr.length; j++) {
@@ -117,7 +156,7 @@ public class Tools {
         return sb.toString();
     }
 
-    String bytePTAddrToString(byte[] addr) {
+    public String bytePTAddrToString(byte[] addr) {
         StringBuilder sb = new StringBuilder();
         for (int j = 0; j < addr.length; j++) {
             if (sb.length() != 0)
@@ -183,11 +222,26 @@ public class Tools {
         return extracted;
     }
 
-    public byte[] removeCappHeader(byte[] input, int length, int headerLength) {
+    public byte[] removeHeader(byte[] input, int length, int headerLength) {
         byte[] buf = new byte[length-headerLength];
         for(int i=0; i<length-headerLength; i++){
             buf[i]=input[i+headerLength];
         }
         return buf;
+    }
+
+    public String setFlag(String flag){
+        String flagTemp = "";
+        if(flag.contains("U"))
+            flagTemp += "U";
+        if(flag.contains("G"))
+            flagTemp += "G";
+        if(flag.contains("H"))
+            flagTemp += "H";
+        if(flag.contains("D"))
+            flagTemp += "D";
+        if(flag.contains("M"))
+            flagTemp += "M";
+        return flagTemp;
     }
 }

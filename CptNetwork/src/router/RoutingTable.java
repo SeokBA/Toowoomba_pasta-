@@ -19,6 +19,16 @@ public class RoutingTable {
     public ArrayList<RoutingRecord> getTable() {
         return routingTable;
     }
+
+    public String[][] getStringArray(){
+        String[][] arr = new String[routingTable.size()][];
+        int idx = 0;
+        for(RoutingRecord i:routingTable){
+            arr[idx] = i.getStringArray();
+            idx++;
+        }
+        return arr;
+    }
 }
 
 class RoutingRecord {
@@ -83,7 +93,6 @@ class RoutingRecord {
     public String getFlag() {
         return flag;
     }
-
 
     public String[] getStringArray() {
         return new String[] { tools.ipAddrByteToString(dstAddr), tools.ipAddrByteToString(netmask),

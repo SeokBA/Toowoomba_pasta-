@@ -115,7 +115,7 @@ public class EthernetLayer implements BaseLayer{
         // 자기가 보낸 패킷, 브로드캐스트가 아니면서 내가 타겟이 아니면 false
         if(isItMyPacket(input)||(!isBroadCast(input)&&!isTargetMe(input)))
             return false;
-        byte[] data = tools.removeCappHeader(input, input.length,14);
+        byte[] data = tools.removeHeader(input, input.length,14);
         if(isArp(input)) // arp
             this.getUpperLayer(1).receive(data);
         else // message
