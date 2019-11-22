@@ -19,7 +19,7 @@
 ## - 2019.11.21
   - 김석호 : interface_0, 1 select label popup 관련 기능들과 Static Routine Table add 기능 구현
 ## - 2019.11.22
-  - 김종운 : 수정사항 merge, update
+  - 김종운 : 수정사항 merge, update (RoutingTable HashMap -> ArrayList 변경 )
   - 김석호 : 
       * updateARPTable, updateProxyTable 메소드 구현 (Tools로 이동, 싱글톤), update method들을 사용하기 위한 코드 변경  
-      * routerTable의 Delete 구현
+      * btnRoutingDelete 구현
