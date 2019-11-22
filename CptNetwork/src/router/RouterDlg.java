@@ -498,7 +498,9 @@ public class RouterDlg extends JFrame implements BaseLayer {
                         flag += "H";
                     int interface_num = addInterfaceComboBox.getSelectedIndex();
                     int metric = 1;
-                    routingTable.getTable().put(dstIPAddr, new RoutingRecord(dstIPAddr, netMask, gateWay, flag, interface_num, metric));
+//                    routingTable.getTable().put(dstIPAddr, new RoutingRecord(dstIPAddr, netMask, gateWay, flag, interface_num, metric));
+                    // todo 얘도 수정 필요한 듯
+                    routingTable.getTable().add(new RoutingRecord(dstIPAddr, netMask, gateWay, flag, interface_num, metric));
                     updateRoutingTable();
                     setVisible(false);
                 }
@@ -517,11 +519,12 @@ public class RouterDlg extends JFrame implements BaseLayer {
     }
 
     public void updateRoutingTable() {
-        routingTableStr = routingTable.getStringArray();
-        while (routineModel.getRowCount() > 0)
-            routineModel.removeRow(0);
-        for (String[] i:routingTableStr)
-            routineModel.addRow(i);
+        // todo 우선 주석 Map to List 필요
+//        routingTableStr = routingTable.getStringArray();
+//        while (routineModel.getRowCount() > 0)
+//            routineModel.removeRow(0);
+//        for (String[] i:routingTableStr)
+//            routineModel.addRow(i);
     }
 
     public void updateARPTable() {

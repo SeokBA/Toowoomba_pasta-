@@ -74,7 +74,7 @@ public class Tools {
         return sb.toString();
     }
 
-    private byte[] ipAddrStringToByte(String address) {
+    public byte[] ipAddrStringToByte(String address) {
         String[] Stringarray = address.split("\\.");
         byte[] intarray = new byte[4];
         for (int i = 0; i < intarray.length; i++) {

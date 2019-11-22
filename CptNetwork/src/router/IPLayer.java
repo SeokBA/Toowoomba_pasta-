@@ -8,11 +8,13 @@ public class IPLayer implements BaseLayer{
     private BaseLayer p_UnderLayer = null;
     private ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
     private ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
+    private RoutingTable routingtable;
     Tools tools;
 
     public IPLayer(String pName) {
         pLayerName = pName;
         tools =new Tools();
+        routingtable=RoutingTable.getInstance();
     }
 
     private class _IP_ADDR{
@@ -121,11 +123,45 @@ public class IPLayer implements BaseLayer{
 
     public synchronized boolean receive(byte[] input) {
         // 자기가 보낸 패킷이거나, 목적지가 내가 아니면 버림
-        if(isItMyPacket(input)||(!isTargetMe(input)))
+        /*if(isItMyPacket(input)||(!isTargetMe(input)))
             return false;
         byte[] data = tools.removeCappHeader(input, input.length,19);
         this.getUpperLayer(0).receive(data);
-        return true;
+        return true;*/
+        // ~ 1차 과제
+
+        //findRoutingRecord(input);
+        return false;
+    }
+
+    //subnetMask와 &연산
+    public RoutingRecord findRoutingRecord(byte[] input) {
+        boolean findflag = true;
+        for(RoutingRecord element : routingtable.getTable()) {
+            byte[] subNetmask = element.getNetmask();
+            byte[] dstAddr = element.getDstAddr();
+
+            for(int i =0; i<4; i++) {
+                if(dstAddr[i] != (input[i]&subNetmask[i])) {
+                    findflag = false;
+                }
+            }
+            if(findflag) {
+                return element;
+            }
+        }
+        return null;
+    }
+
+    public void routingTableAdd(RoutingRecord routeData) {
+        routingtable.getTable().add(routeData);
+    }
+
+    public String[][] getStringArray(){
+        String[][] arr = new String[routingtable.getTable().size()][];
+        for(int i = 0; i<routingtable.getTable().size(); i++)
+            arr[i] = routingtable.getTable().get(i).getStringArray();
+        return arr;
     }
 
     public boolean isItMyPacket(byte[] input) {
