@@ -223,7 +223,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
         public void actionPerformed(ActionEvent e) { // routing add
             if (e.getSource() == btnRoutingAdd) {
                 if (popupRoutingAdderDlg == null)
-                    popupRoutingAdderDlg = new PopupRoutingAdderDlg((NILayer) m_LayerMgr.getLayer("NI"));
+                    popupRoutingAdderDlg = new PopupRoutingAdderDlg();
                 popupRoutingAdderDlg.popup();
             }
             if (e.getSource() == btnRoutingDelete) { // routing delete
@@ -251,7 +251,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
     }
 
     class setMouseListener implements MouseListener {
-        PopupSelectNICDlg popupSelectNICDlg = new PopupSelectNICDlg((NILayer) m_LayerMgr.getLayer("NI"));
+        PopupSelectNICDlg popupSelectNICDlg = new PopupSelectNICDlg((NILayer) m_LayerMgr.getLayer("NI_L"));
 
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -365,8 +365,6 @@ public class RouterDlg extends JFrame implements BaseLayer {
     }
 
     public class PopupRoutingAdderDlg extends JFrame {
-        NILayer m_NILayer;
-
         JPanel addDestinationPanel;
         JPanel addNetmaskPanel;
         JPanel addGatewayPanel;
@@ -392,9 +390,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
         setPopupListener setPopupListener = new setPopupListener();
 
-        public PopupRoutingAdderDlg(NILayer m_NILayer) {
-            this.m_NILayer = m_NILayer;
-
+        public PopupRoutingAdderDlg() {
             // main
             setTitle("Routing Table Entry");
             setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
