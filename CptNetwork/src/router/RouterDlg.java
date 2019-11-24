@@ -73,6 +73,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
     setMouseListener setMouseListener = new setMouseListener();
 
     PopupRoutingAdderDlg popupRoutingAdderDlg;
+    PopupProxyAdderDlg popupProxyAdderDlg;
 
     public static void main(String[] args) {
         m_LayerMgr.addLayer(new RouterDlg("GUI"));
@@ -214,12 +215,6 @@ public class RouterDlg extends JFrame implements BaseLayer {
         lbInterface_1MAC.addMouseListener(setMouseListener);
         contentPanel.add(lbInterface_1MAC);
 
-        // test start
-        arpCacheTable.getTable().put("a", new ARPCacheRecord("a", "b", "c"));
-        arpCacheTable.getTable().put("q", new ARPCacheRecord("q", "w", "e"));
-        arpCacheTable.getTable().put("e", new ARPCacheRecord("e", "r", "t"));
-        // test end
-
         setVisible(true);
     }
 
@@ -233,35 +228,34 @@ public class RouterDlg extends JFrame implements BaseLayer {
             }
             if (e.getSource() == btnRoutingDelete) { // routing delete
                 int selectRow = routingArea.getSelectedRow();
-                if(selectRow == -1){
+                if (selectRow == -1) {
                     JOptionPane.showMessageDialog(null, "Select a table item to delete.");
-                }
-                else{
+                } else {
                     routingTable.getTable().remove(selectRow);
                     tools.updateRoutingTable();
                 }
             }
             if (e.getSource() == btnARPDelete) { // arp delete
                 int selectRow = arpArea.getSelectedRow();
-                if(selectRow == -1){
+                if (selectRow == -1) {
                     JOptionPane.showMessageDialog(null, "Select a table item to delete.");
-                }
-                else{
+                } else {
                     arpCacheTable.getTable().remove(arpArea.getValueAt(selectRow, 0));
                     tools.updateARPTable();
                 }
             }
             if (e.getSource() == btnProxyAdd) { // proxy add
-
+                if (popupProxyAdderDlg == null)
+                    popupProxyAdderDlg = new PopupProxyAdderDlg();
+                popupProxyAdderDlg.popup();
             }
             if (e.getSource() == btnProxyDelete) { // proxy delete
                 int selectRow = proxyArea.getSelectedRow();
-                if(selectRow == -1){
+                if (selectRow == -1) {
                     JOptionPane.showMessageDialog(null, "Select a table item to delete.");
-                }
-                else{
-                    arpCacheTable.getTable().remove(proxyArea.getValueAt(selectRow, 0));
-                    tools.updateARPTable();
+                } else {
+                    proxyArpTable.getTable().remove(proxyArea.getValueAt(selectRow, 0));
+                    tools.updateProxyTable();
                 }
             }
         }
@@ -536,6 +530,122 @@ public class RouterDlg extends JFrame implements BaseLayer {
                     int metric = 1;
                     routingTable.getTable().add(new RoutingRecord(dstIPAddr, netMask, gateWay, flag, interface_num, metric));
                     tools.updateRoutingTable();
+                    setVisible(false);
+                }
+
+                if (e.getSource() == btnCancel) { // Pushed "Cancel" button
+                    setVisible(false);
+                }
+            }
+        }
+    }
+
+    public class PopupProxyAdderDlg extends JFrame {
+        JPanel addDevicePanel;
+        JPanel addProxyIPPanel;
+        JPanel addProxyEtherPanel;
+
+        JButton btnOK;
+        JButton btnCancel;
+
+        JLabel lbSelectDevice;
+        JLabel lbAddProxyIP;
+        JLabel lbAddProxyEther;
+
+        JComboBox<String> diviceSelectBox;
+
+        JTextField tfAddProxyIP;
+        JTextField tfAddProxyEther;
+
+        public PopupProxyAdderDlg() {
+            // main
+            setTitle("Add Proxy ARP Entry");
+            setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+            setSize(320, 220);
+            setLayout(null);
+
+
+            // Panel
+            addDevicePanel = new JPanel();
+            addDevicePanel.setLayout(null);
+            addDevicePanel.setBounds(130, 23, 150, 20);
+            add(addDevicePanel);
+
+            addProxyIPPanel = new JPanel();
+            addProxyIPPanel.setLayout(null);
+            addProxyIPPanel.setBounds(130, 63, 150, 20);
+            add(addProxyIPPanel);
+
+            addProxyEtherPanel = new JPanel();
+            addProxyEtherPanel.setLayout(null);
+            addProxyEtherPanel.setBounds(130, 103, 150, 20);
+            add(addProxyEtherPanel);
+
+
+            // Button
+            btnOK = new JButton("OK");
+            btnOK.setBounds(50, 140, 100, 27);
+            btnOK.addActionListener(new setPopupListener());
+            add(btnOK);
+
+            btnCancel = new JButton("Cancel");
+            btnCancel.setBounds(160, 140, 100, 27);
+            btnCancel.addActionListener(new setPopupListener());
+            add(btnCancel);
+
+
+            // Label
+            lbSelectDevice = new JLabel("Device");
+            lbSelectDevice.setBounds(20, 20, 130, 24);
+            add(lbSelectDevice);
+
+            lbAddProxyIP = new JLabel("IP Address");
+            lbAddProxyIP.setBounds(20, 60, 130, 24);
+            add(lbAddProxyIP);
+
+            lbAddProxyEther = new JLabel("Ethernet Address");
+            lbAddProxyEther.setBounds(20, 100, 130, 24);
+            add(lbAddProxyEther);
+
+
+            // ComboBox
+            String[] hostArray = {"0", "1"};
+            diviceSelectBox = new JComboBox<>(hostArray);
+            diviceSelectBox.setBounds(0, 0, 150, 20);
+            diviceSelectBox.addActionListener(new setPopupListener());
+            addDevicePanel.add(diviceSelectBox);
+
+
+            // Text field
+            tfAddProxyIP = new JTextField();
+            tfAddProxyIP.setBounds(0, 0, 170, 20);
+            tfAddProxyIP.setColumns(10);
+            addProxyIPPanel.add(tfAddProxyIP);
+            add(addProxyIPPanel);
+
+            tfAddProxyEther = new JTextField();
+            tfAddProxyEther.setBounds(0, 0, 170, 20);
+            tfAddProxyEther.setColumns(10);
+            addProxyEtherPanel.add(tfAddProxyEther);
+            add(addProxyEtherPanel);
+        }
+
+        public void popup() {
+            tfAddProxyIP.setText("");
+            tfAddProxyEther.setText("");
+            diviceSelectBox.setSelectedIndex(0);
+            setVisible(true);
+        }
+
+        class setPopupListener implements ActionListener {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == btnOK) { // Pushed "OK" button
+                    String ipAddr = tfAddProxyIP.getText();
+                    String hwAddr = tfAddProxyEther.getText();
+                    int interfaceNum = diviceSelectBox.getSelectedIndex();
+                    proxyArpTable.getTable().put(tfAddProxyIP.getText(), new ProxyARPRecord(ipAddr, hwAddr, interfaceNum));
+                    tools.updateProxyTable();
                     setVisible(false);
                 }
 

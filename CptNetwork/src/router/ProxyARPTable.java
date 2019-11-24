@@ -54,21 +54,21 @@ public class ProxyARPTable {
 class ProxyARPRecord {
     String ipAddr;
     String hwAddr;
-    String interfaceNum;
+    int interfaceNum;
 
     public ProxyARPRecord(String ipAddr, String hwAddr) {
         this.ipAddr = ipAddr;
         this.hwAddr = hwAddr;
-        this.interfaceNum = "?";
+        this.interfaceNum = -1;
     }
 
-    public ProxyARPRecord(String ipAddr, String hwAddr, String interfaceNum) {
+    public ProxyARPRecord(String ipAddr, String hwAddr, int interfaceNum) {
         this.ipAddr = ipAddr;
         this.hwAddr = hwAddr;
         this.interfaceNum = interfaceNum;
     }
 
     public String[] getStringArray(){
-        return new String[]{ipAddr, hwAddr, interfaceNum};
+        return new String[]{ipAddr, hwAddr, String.valueOf(interfaceNum)};
     }
 }
