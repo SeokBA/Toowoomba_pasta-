@@ -25,3 +25,5 @@
       * routerTable의 Delete 구현
   - 최수민 :
       * RouterDlg : 레이어 연결 수정
+## - 2019.11.24
+  - 김석호 : btnARPDelete, btnProxyDelete 기능 구현
