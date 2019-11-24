@@ -45,6 +45,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
     JPanel StaticRoutingDisplayPanel;
     JPanel ARPCacheDisplayPanel;
     JPanel ProxyARPDisplayPanel;
+    JPanel HostPanel;
 
     DefaultTableModel routineModel;
     DefaultTableModel arpModel;
@@ -64,6 +65,8 @@ public class RouterDlg extends JFrame implements BaseLayer {
     JButton btnProxyAdd;
     JButton btnProxyDelete;
     JButton btnGARPSend;
+    JButton btnInterface0Start;
+    JButton btnInterface1Start;
 
     JLabel lbInterface_0IP;
     JLabel lbInterface_1IP;
@@ -75,6 +78,8 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
     PopupRoutingAdderDlg popupRoutingAdderDlg;
     PopupProxyAdderDlg popupProxyAdderDlg;
+
+    int selected0 = -1, selected1 = -1;
 
     public static void main(String[] args) {
         m_LayerMgr.addLayer(new RouterDlg("GUI"));
@@ -98,7 +103,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
         // main
         setTitle("TestRouting");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(250, 250, 980, 460);
+        setBounds(250, 250, 980, 550);
         contentPanel = new JPanel();
         ((JComponent) contentPanel).setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(contentPanel);
@@ -124,6 +129,11 @@ public class RouterDlg extends JFrame implements BaseLayer {
         ProxyARPPanel.setBounds(540, 235, 400, 170);
         contentPanel.add(ProxyARPPanel);
 
+        HostPanel = new JPanel();
+        HostPanel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Host Button", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+        HostPanel.setBounds(20, 415, 920, 70);
+        contentPanel.add(HostPanel);
+
         StaticRoutingDisplayPanel = new JPanel();
         StaticRoutingDisplayPanel.setLayout(null);
         StaticRoutingDisplayPanel.setBounds(10, 15, 480, 300);
@@ -148,9 +158,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
         // Table
         routingArea = new JTable(routineModel);
-
         arpArea = new JTable(arpModel);
-
         proxyArea = new JTable(proxyModel);
 
 
@@ -194,10 +202,20 @@ public class RouterDlg extends JFrame implements BaseLayer {
         btnProxyDelete.addActionListener(setAddressListener);
         ProxyARPPanel.add(btnProxyDelete);
 
+        btnInterface0Start = new JButton("Start Interface_0");
+        btnInterface0Start.setBounds(160, 50, 120, 25);
+        btnInterface0Start.addActionListener(setAddressListener);
+        HostPanel.add(btnInterface0Start);
+
         btnGARPSend = new JButton("Send Gratuitous ARP");
-        btnGARPSend.setBounds(400, 20, 200, 25);
+        btnGARPSend.setBounds(360, 50, 200, 25);
         btnGARPSend.addActionListener(setAddressListener);
-        contentPanel.add(btnGARPSend);
+        HostPanel.add(btnGARPSend);
+
+        btnInterface1Start = new JButton("Start Interface_1");
+        btnInterface1Start.setBounds(580, 50, 120, 25);
+        btnInterface1Start.addActionListener(setAddressListener);
+        HostPanel.add(btnInterface1Start);
 
         // Label
         lbInterface_0IP = new JLabel("Interface_0 IP      : ");
@@ -263,32 +281,44 @@ public class RouterDlg extends JFrame implements BaseLayer {
                     tools.updateProxyTable();
                 }
             }
-            if(e.getSource() == btnGARPSend){
-                String inputIP=lbInterface_0IP.getText().replace("Interface_0 IP      : ", "");
-                if(inputIP.equals("")){
+            if (e.getSource() == btnGARPSend) {
+                String inputIP = lbInterface_0IP.getText().replace("Interface_0 IP      : ", "");
+                if (inputIP.equals("")) {
                     JOptionPane.showMessageDialog(null, "You did not setting Interface_0.");
                     return;
                 }
 
-                String inputHW=JOptionPane.showInputDialog("Input HW Address");
-                if(inputHW.equals("")){
+                String inputHW = JOptionPane.showInputDialog("Input HW Address");
+                if (inputHW.equals("")) {
                     JOptionPane.showMessageDialog(null, "You did not enter HW address.");
                     return;
                 }
                 System.out.println(inputIP);
 
                 byte[] data = inputHW.getBytes();
-                byte[] hwAddr= tools.stringHWaddrToByte(inputHW);
+                byte[] hwAddr = tools.stringHWaddrToByte(inputHW);
                 byte[] ipAddr = tools.stringIPaddrToByte(inputIP);
                 ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_L")).setEnetSrcAddress(hwAddr);
                 ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcHWAddress(hwAddr);
                 ((IPLayer) m_LayerMgr.getLayer("IP_L")).setDstAddress(ipAddr);
 
-                m_LayerMgr.getLayer("IP_L").send(data,data.length);
+                m_LayerMgr.getLayer("IP_L").send(data, data.length);
+            }
+
+            if (e.getSource() == btnInterface0Start) {
+                if (selected0 == -1)
+                    return;
+                ((NILayer) m_LayerMgr.getLayer("NI_L")).setAdapterNumber(selected0);
+                btnInterface0Start.setEnabled(false);
+            }
+
+            if (e.getSource() == btnInterface1Start) {
+                if (selected1 == -1)
+                    return;
+                ((NILayer) m_LayerMgr.getLayer("NI_R")).setAdapterNumber(selected1);
+                btnInterface1Start.setEnabled(false);
             }
         }
-
-
     }
 
     class setMouseListener implements MouseListener {
@@ -389,7 +419,8 @@ public class RouterDlg extends JFrame implements BaseLayer {
                         ex.printStackTrace();
                     }
                     if (!handChk) {
-                        ((NILayer) m_LayerMgr.getLayer("NI_L")).setAdapterNumber(selected);
+                        selected0 = selected;
+                        //((NILayer) m_LayerMgr.getLayer("NI_L")).setAdapterNumber(selected);
                         ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_L")).setEnetSrcAddress(tools.hwAddrStringToByte(macAddressStr));
                         ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcHWAddress(tools.hwAddrStringToByte(macAddressStr));
                         ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcPTAddress(tools.ipAddrStringToByte(ipAddressStr));
@@ -398,7 +429,8 @@ public class RouterDlg extends JFrame implements BaseLayer {
                         lbInterface_0IP.setText("Interface_0 IP      : " + ipAddressStr);
                         lbInterface_0MAC.setText("Interface_0 MAC : " + macAddressStr);
                     } else {
-                        ((NILayer) m_LayerMgr.getLayer("NI_R")).setAdapterNumber(selected);
+                        selected1 = selected;
+                        //((NILayer) m_LayerMgr.getLayer("NI_R")).setAdapterNumber(selected);
                         ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_R")).setEnetSrcAddress(tools.hwAddrStringToByte(macAddressStr));
                         ((ARPLayer) m_LayerMgr.getLayer("ARP_R")).setSrcHWAddress(tools.hwAddrStringToByte(macAddressStr));
                         ((ARPLayer) m_LayerMgr.getLayer("ARP_R")).setSrcPTAddress(tools.ipAddrStringToByte(ipAddressStr));
