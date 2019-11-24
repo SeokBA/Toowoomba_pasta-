@@ -51,7 +51,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
     DefaultTableModel proxyModel;
 
     JTable routingArea;
-    JTable ARPArea;
+    JTable arpArea;
     JTable proxyArea;
 
     JScrollPane scrollARP;
@@ -147,7 +147,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
         // Table
         routingArea = new JTable(routineModel);
 
-        ARPArea = new JTable(arpModel);
+        arpArea = new JTable(arpModel);
 
         proxyArea = new JTable(proxyModel);
 
@@ -157,7 +157,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
         scrollRouting.setBounds(0, 0, 480, 300);
         StaticRoutingDisplayPanel.add(scrollRouting);
 
-        scrollARP = new JScrollPane(ARPArea);
+        scrollARP = new JScrollPane(arpArea);
         scrollARP.setBounds(0, 0, 380, 125);
         ARPCacheDisplayPanel.add(scrollARP);
 
@@ -214,6 +214,11 @@ public class RouterDlg extends JFrame implements BaseLayer {
         lbInterface_1MAC.addMouseListener(setMouseListener);
         contentPanel.add(lbInterface_1MAC);
 
+        // test start
+        arpCacheTable.getTable().put("a", new ARPCacheRecord("a", "b", "c"));
+        arpCacheTable.getTable().put("q", new ARPCacheRecord("q", "w", "e"));
+        arpCacheTable.getTable().put("e", new ARPCacheRecord("e", "r", "t"));
+        // test end
 
         setVisible(true);
     }
@@ -237,13 +242,27 @@ public class RouterDlg extends JFrame implements BaseLayer {
                 }
             }
             if (e.getSource() == btnARPDelete) { // arp delete
-
+                int selectRow = arpArea.getSelectedRow();
+                if(selectRow == -1){
+                    JOptionPane.showMessageDialog(null, "Select a table item to delete.");
+                }
+                else{
+                    arpCacheTable.getTable().remove(arpArea.getValueAt(selectRow, 0));
+                    tools.updateARPTable();
+                }
             }
             if (e.getSource() == btnProxyAdd) { // proxy add
 
             }
             if (e.getSource() == btnProxyDelete) { // proxy delete
-
+                int selectRow = proxyArea.getSelectedRow();
+                if(selectRow == -1){
+                    JOptionPane.showMessageDialog(null, "Select a table item to delete.");
+                }
+                else{
+                    arpCacheTable.getTable().remove(proxyArea.getValueAt(selectRow, 0));
+                    tools.updateARPTable();
+                }
             }
         }
 

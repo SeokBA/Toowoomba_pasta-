@@ -1,7 +1,6 @@
 package router;
 
 import javax.swing.*;
-import java.io.UnsupportedEncodingException;
 
 public class Tools {
     private static final RoutingTable routingTable = new RoutingTable();
