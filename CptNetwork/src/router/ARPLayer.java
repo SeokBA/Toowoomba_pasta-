@@ -217,7 +217,8 @@ public class ARPLayer implements BaseLayer {
             String senderPTaddrStr = tools.bytePTAddrToString(senderPTaddr);
             String senderHWaddrStr = tools.byteHWAddrToString(senderHWaddr);
             cacheTable.put(senderPTaddrStr, new ARPCacheRecord(senderPTaddrStr, senderHWaddrStr, "Complete"));
-            ((ARPDlg) getUpperLayer(0)).updateCacheTable();
+//            ((ARPDlg) getUpperLayer(0)).updateCacheTable();
+            tools.updateARPTable();
 
             byte[] targetPTaddr = tools.extractSelectPart(input, 24, 28);
             String targetPTaddrStr = tools.bytePTAddrToString(targetPTaddr);
@@ -232,7 +233,8 @@ public class ARPLayer implements BaseLayer {
             byte[] srcHWAddr = tools.extractSelectPart(input, 8, 14);
             String srcHWAddrStr = tools.byteHWAddrToString(srcHWAddr);
             cacheTable.put(dstPTAddrStr, new ARPCacheRecord(dstPTAddrStr, srcHWAddrStr, "Complete"));
-            ((ARPDlg) getUpperLayer(0)).updateCacheTable();
+//            ((ARPDlg) getUpperLayer(0)).updateCacheTable();
+            tools.updateARPTable();
         }
         return true;
     }
