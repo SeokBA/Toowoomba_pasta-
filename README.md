@@ -29,4 +29,5 @@
   - 김석호 : 
       * btnARPDelete, btnProxyAdd, btnProxyDelete 기능 구현  
       * Gratuitous ARP를 보내는 btnGARPSend 구현  
-      * interface setting 오류 
+      * interface setting 오류 수정
+      * IPv4를 끊은 후 NI 연결할 수 있는 btnInterface0Start, btnInterface1Start 기능 구현
