@@ -61,19 +61,6 @@ public class EthernetLayer implements BaseLayer{
         }
     }
 
-    public void setEnetSrcAddress(String address) {
-        String[] sp=address.split(":");
-        for(int i=0; i<sp.length; i++){
-            byte toByte;
-            int toInt = Integer.decode("0x"+sp[i]);
-            if(toInt>127)
-                toByte=(byte)(toInt-256);
-            else
-                toByte=(byte)toInt;
-            efHeader.enet_srcaddr.addr[i]=toByte;
-        }
-    }
-
     public void setEnetSrcAddress(byte[] addr){
         for(int i=0; i<addr.length; i++){
             efHeader.enet_srcaddr.addr[i]=addr[i];

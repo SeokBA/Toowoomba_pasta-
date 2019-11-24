@@ -389,9 +389,21 @@ public class RouterDlg extends JFrame implements BaseLayer {
                         ex.printStackTrace();
                     }
                     if (!handChk) {
+                        ((NILayer) m_LayerMgr.getLayer("NI_L")).setAdapterNumber(selected);
+                        ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_L")).setEnetSrcAddress(tools.hwAddrStringToByte(macAddressStr));
+                        ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcHWAddress(tools.hwAddrStringToByte(macAddressStr));
+                        ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcPTAddress(tools.ipAddrStringToByte(ipAddressStr));
+                        ((IPLayer) m_LayerMgr.getLayer("IP_L")).setSrcAddress(tools.ipAddrStringToByte(ipAddressStr));
+
                         lbInterface_0IP.setText("Interface_0 IP      : " + ipAddressStr);
                         lbInterface_0MAC.setText("Interface_0 MAC : " + macAddressStr);
                     } else {
+                        ((NILayer) m_LayerMgr.getLayer("NI_R")).setAdapterNumber(selected);
+                        ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_R")).setEnetSrcAddress(tools.hwAddrStringToByte(macAddressStr));
+                        ((ARPLayer) m_LayerMgr.getLayer("ARP_R")).setSrcHWAddress(tools.hwAddrStringToByte(macAddressStr));
+                        ((ARPLayer) m_LayerMgr.getLayer("ARP_R")).setSrcPTAddress(tools.ipAddrStringToByte(ipAddressStr));
+                        ((IPLayer) m_LayerMgr.getLayer("IP_R")).setSrcAddress(tools.ipAddrStringToByte(ipAddressStr));
+
                         lbInterface_1IP.setText("Interface_1 IP      : " + ipAddressStr);
                         lbInterface_1MAC.setText("Interface_2 MAC : " + macAddressStr);
                     }
