@@ -26,4 +26,4 @@
   - 최수민 :
       * RouterDlg : 레이어 연결 수정
 ## - 2019.11.24
-  - 김석호 : btnARPDelete, btnProxyAdd, btnProxyDelete 기능 구현
+  - 김석호 : btnARPDelete, btnProxyAdd, btnProxyDelete 기능 구현, Gratuitous ARP를 보내는 btnGARPSend 구현
