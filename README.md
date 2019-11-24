@@ -31,3 +31,5 @@
       * Gratuitous ARP를 보내는 btnGARPSend 구현  
       * interface setting 오류 수정
       * IPv4를 끊은 후 NI 연결할 수 있는 btnInterface0Start, btnInterface1Start 기능 구현
+  - 김종운 :
+      * ArpLayer에서 현재 사용하는 GUI에 맞게 ARP Table 업데이트 수정
