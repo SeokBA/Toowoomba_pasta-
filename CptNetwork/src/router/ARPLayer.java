@@ -166,7 +166,7 @@ public class ARPLayer implements BaseLayer {
 
     public boolean send(byte[] input, int length, byte opcode, String addr) {
         // reply
-        byte[] hostMacAddr = tools.string2HWaddr(addr);
+        byte[] hostMacAddr = tools.stringHWaddrToByte(addr);
         for (int i = 18; i < 24; i++)
             input[i] = hostMacAddr[i - 18];
         input = swapping(input);

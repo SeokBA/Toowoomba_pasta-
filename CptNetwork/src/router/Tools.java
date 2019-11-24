@@ -169,23 +169,7 @@ public class Tools {
         return sb.toString();
     }
 
-
-    public byte[] string2HWaddr(String address) {
-        byte addr[]=new byte[6];
-        String[] sp = address.split(":");
-        for (int i = 0; i < sp.length; i++) {
-            byte toByte;
-            int toInt = Integer.decode("0x" + sp[i]);
-            if (toInt > 127)
-                toByte = (byte) (toInt - 256);
-            else
-                toByte = (byte) toInt;
-            addr[i] = toByte;
-        }
-        return addr;
-    }
-
-    public byte[] ipStringtoByte(String address){
+    public byte[] stringIPaddrToByte(String address){
         String[] Stringarray = address.split("\\.");
         byte[] intarray = new byte[4];
         for(int i=0 ; i<intarray.length; i++) {

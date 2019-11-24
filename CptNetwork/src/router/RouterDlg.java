@@ -63,6 +63,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
     JButton btnARPDelete;
     JButton btnProxyAdd;
     JButton btnProxyDelete;
+    JButton btnGARPSend;
 
     JLabel lbInterface_0IP;
     JLabel lbInterface_1IP;
@@ -193,6 +194,10 @@ public class RouterDlg extends JFrame implements BaseLayer {
         btnProxyDelete.addActionListener(setAddressListener);
         ProxyARPPanel.add(btnProxyDelete);
 
+        btnGARPSend = new JButton("Send Gratuitous ARP");
+        btnGARPSend.setBounds(400, 20, 200, 25);
+        btnGARPSend.addActionListener(setAddressListener);
+        contentPanel.add(btnGARPSend);
 
         // Label
         lbInterface_0IP = new JLabel("Interface_0 IP      : ");
@@ -257,6 +262,29 @@ public class RouterDlg extends JFrame implements BaseLayer {
                     proxyArpTable.getTable().remove(proxyArea.getValueAt(selectRow, 0));
                     tools.updateProxyTable();
                 }
+            }
+            if(e.getSource() == btnGARPSend){
+                String inputIP=lbInterface_0IP.getText().replace("Interface_0 IP      : ", "");
+                if(inputIP.equals("")){
+                    JOptionPane.showMessageDialog(null, "You did not setting Interface_0.");
+                    return;
+                }
+
+                String inputHW=JOptionPane.showInputDialog("Input HW Address");
+                if(inputHW.equals("")){
+                    JOptionPane.showMessageDialog(null, "You did not enter HW address.");
+                    return;
+                }
+                System.out.println(inputIP);
+
+                byte[] data = inputHW.getBytes();
+                byte[] hwAddr= tools.stringHWaddrToByte(inputHW);
+                byte[] ipAddr = tools.stringIPaddrToByte(inputIP);
+                ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_L")).setEnetSrcAddress(hwAddr);
+                ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcHWAddress(hwAddr);
+                ((IPLayer) m_LayerMgr.getLayer("IP_L")).setDstAddress(ipAddr);
+
+                m_LayerMgr.getLayer("IP_L").send(data,data.length);
             }
         }
 
