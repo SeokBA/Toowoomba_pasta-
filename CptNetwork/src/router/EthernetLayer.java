@@ -1,6 +1,7 @@
 package router;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class EthernetLayer implements BaseLayer{
     private int nUnderLayerCount = 0;
@@ -99,6 +100,7 @@ public class EthernetLayer implements BaseLayer{
     }
 
     public synchronized boolean receive(byte[] input) {
+//        System.out.println(Arrays.toString(input));
         // 자기가 보낸 패킷, 브로드캐스트가 아니면서 내가 타겟이 아니면 false
         if(isItMyPacket(input)||(!isBroadCast(input)&&!isTargetMe(input)))
             return false;

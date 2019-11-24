@@ -58,8 +58,8 @@ public class Tools {
 
     byte[] intToByte2(int value) {
         byte[] temp = new byte[2];
-        temp[1] = (byte) (value >> 8);
-        temp[0] = (byte) value;
+        temp[0] = (byte) (value >> 8);
+        temp[1] = (byte) value;
         return temp;
     }
 
