@@ -285,9 +285,33 @@ public class RouterDlg extends JFrame implements BaseLayer {
                 }
             }
             if (e.getSource() == btnGARPSend) {
-                String inputIP = lbInterface_0IP.getText().replace("Interface_0 IP      : ", "");
+                EthernetLayer selectEtherNetLayer;
+                ARPLayer selectARPLayer;
+                IPLayer selectIPLayer;
+                JButton selectInterfaceBtn;
+                String inputIP;
+                int inputInterface = JOptionPane.showConfirmDialog(null, "Select Interface (input 0 or 1)");
+                if (inputInterface == 0) {
+                    selectInterfaceBtn = btnInterface0Start;
+                    selectEtherNetLayer = (EthernetLayer) m_LayerMgr.getLayer("EtherNet_L");
+                    selectARPLayer = (ARPLayer) m_LayerMgr.getLayer("ARP_L");
+                    selectIPLayer = (IPLayer) m_LayerMgr.getLayer("IP_L");
+                    inputIP = selectInterfaceBtn.getText().replace("Interface_0 IP      : ", "");
+                }
+                else if(inputInterface == 1){
+                    selectInterfaceBtn = btnInterface1Start;
+                    selectEtherNetLayer = (EthernetLayer) m_LayerMgr.getLayer("EtherNet_R");
+                    selectARPLayer = (ARPLayer) m_LayerMgr.getLayer("ARP_R");
+                    selectIPLayer = (IPLayer) m_LayerMgr.getLayer("IP_R");
+                    inputIP = selectInterfaceBtn.getText().replace("Interface_1 IP      : ", "");
+                }
+                else{
+                    JOptionPane.showMessageDialog(null, "input 0 or 1");
+                    return;
+                }
+
                 if (inputIP.equals("")) {
-                    JOptionPane.showMessageDialog(null, "You did not setting Interface_0.");
+                    JOptionPane.showMessageDialog(null, "You did not setting Interface_0 or 1");
                     return;
                 }
 
@@ -296,16 +320,15 @@ public class RouterDlg extends JFrame implements BaseLayer {
                     JOptionPane.showMessageDialog(null, "You did not enter HW address.");
                     return;
                 }
-                System.out.println(inputIP);
 
                 byte[] data = inputHW.getBytes();
                 byte[] hwAddr = tools.stringHWaddrToByte(inputHW);
                 byte[] ipAddr = tools.stringIPaddrToByte(inputIP);
-                ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_L")).setEnetSrcAddress(hwAddr);
-                ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcHWAddress(hwAddr);
-                ((IPLayer) m_LayerMgr.getLayer("IP_L")).setDstAddress(ipAddr);
-
-                m_LayerMgr.getLayer("IP_L").send(data, data.length);
+                selectEtherNetLayer.setEnetSrcAddress(hwAddr);
+                selectARPLayer.setSrcHWAddress(hwAddr);
+                selectARPLayer.setSrcPTAddress(ipAddr);
+                selectIPLayer.setDstAddress(ipAddr);
+                selectIPLayer.send(data, data.length);
             }
 
             if (e.getSource() == btnInterface0Start) {
