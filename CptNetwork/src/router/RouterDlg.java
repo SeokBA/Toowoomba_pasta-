@@ -288,24 +288,19 @@ public class RouterDlg extends JFrame implements BaseLayer {
                 EthernetLayer selectEtherNetLayer;
                 ARPLayer selectARPLayer;
                 IPLayer selectIPLayer;
-                JButton selectInterfaceBtn;
                 String inputIP;
                 String inputInterface = JOptionPane.showInputDialog("Select Interface (input 0 or 1)");
                 if (inputInterface.equals("0")) {
-                    selectInterfaceBtn = btnInterface0Start;
                     selectEtherNetLayer = (EthernetLayer) m_LayerMgr.getLayer("EtherNet_L");
                     selectARPLayer = (ARPLayer) m_LayerMgr.getLayer("ARP_L");
                     selectIPLayer = (IPLayer) m_LayerMgr.getLayer("IP_L");
-                    inputIP = selectInterfaceBtn.getText().replace("Interface_0 IP      : ", "");
-                }
-                else if(inputInterface.equals("1")){
-                    selectInterfaceBtn = btnInterface1Start;
+                    inputIP = lbInterface_0IP.getText().replace("Interface_0 IP      : ", "");
+                } else if (inputInterface.equals("1")) {
                     selectEtherNetLayer = (EthernetLayer) m_LayerMgr.getLayer("EtherNet_R");
                     selectARPLayer = (ARPLayer) m_LayerMgr.getLayer("ARP_R");
                     selectIPLayer = (IPLayer) m_LayerMgr.getLayer("IP_R");
-                    inputIP = selectInterfaceBtn.getText().replace("Interface_1 IP      : ", "");
-                }
-                else{
+                    inputIP = lbInterface_1IP.getText().replace("Interface_1 IP      : ", "");
+                } else {
                     JOptionPane.showMessageDialog(null, "input 0 or 1");
                     return;
                 }
@@ -315,7 +310,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
                     return;
                 }
 
-                String inputHW = JOptionPane.showInputDialog("Input HW Address");
+                String inputHW = JOptionPane.showInputDialog("Input Interface " + inputInterface + " HW Address");
                 if (inputHW.equals("")) {
                     JOptionPane.showMessageDialog(null, "You did not enter HW address.");
                     return;
