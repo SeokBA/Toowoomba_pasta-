@@ -290,15 +290,15 @@ public class RouterDlg extends JFrame implements BaseLayer {
                 IPLayer selectIPLayer;
                 JButton selectInterfaceBtn;
                 String inputIP;
-                int inputInterface = JOptionPane.showConfirmDialog(null, "Select Interface (input 0 or 1)");
-                if (inputInterface == 0) {
+                String inputInterface = JOptionPane.showInputDialog("Select Interface (input 0 or 1)");
+                if (inputInterface.equals("0")) {
                     selectInterfaceBtn = btnInterface0Start;
                     selectEtherNetLayer = (EthernetLayer) m_LayerMgr.getLayer("EtherNet_L");
                     selectARPLayer = (ARPLayer) m_LayerMgr.getLayer("ARP_L");
                     selectIPLayer = (IPLayer) m_LayerMgr.getLayer("IP_L");
                     inputIP = selectInterfaceBtn.getText().replace("Interface_0 IP      : ", "");
                 }
-                else if(inputInterface == 1){
+                else if(inputInterface.equals("1")){
                     selectInterfaceBtn = btnInterface1Start;
                     selectEtherNetLayer = (EthernetLayer) m_LayerMgr.getLayer("EtherNet_R");
                     selectARPLayer = (ARPLayer) m_LayerMgr.getLayer("ARP_R");
