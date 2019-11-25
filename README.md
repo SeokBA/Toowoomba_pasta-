@@ -35,3 +35,5 @@
       * ArpLayer에서 현재 사용하는 GUI에 맞게 ARP Table 업데이트 수정
   - 민윤기 :
       * Tools의 IntToByte2 index 표준에 맞게 수정
+## - 2019.11.24
+  - 김석호 : 테이블에 레코드들이 추가가 되지 않는 오류 
