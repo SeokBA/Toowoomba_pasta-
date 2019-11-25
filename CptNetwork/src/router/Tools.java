@@ -197,9 +197,9 @@ public class Tools {
         return data;
     }
 
-    public byte[] extractSelectPart(byte[] input, int startIndex, int finishIndex){
-        byte[] extracted=new byte[finishIndex-startIndex];
-        for(int i=startIndex; i<finishIndex; i++){
+    public byte[] extractSelectPart(byte[] input, int startIndex, int endIndex){
+        byte[] extracted=new byte[endIndex-startIndex];
+        for(int i=startIndex; i<endIndex; i++){
             extracted[i-startIndex]=input[i];
         }
         return extracted;
