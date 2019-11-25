@@ -24,9 +24,9 @@ public class RouterDlg extends JFrame implements BaseLayer {
 
     private Tools tools = new Tools();
 
-    private RoutingTable routingTable = Tools.getRoutingTable();
-    private ARPCacheTable arpCacheTable = Tools.getARPCacheTable();
-    private ProxyARPTable proxyArpTable = Tools.getProxyARPTable();
+    private RoutingTable routingTable;
+    private ARPCacheTable arpCacheTable;
+    private ProxyARPTable proxyArpTable;
 
     private static LayerManager m_LayerMgr = new LayerManager();
 
@@ -84,6 +84,9 @@ public class RouterDlg extends JFrame implements BaseLayer {
     public static void main(String[] args) {
         m_LayerMgr.addLayer(new RouterDlg("GUI"));
         Tools.setGUILayer((RouterDlg) m_LayerMgr.getLayer("GUI"));
+        ((RouterDlg) m_LayerMgr.getLayer("GUI")).routingTable = Tools.getRoutingTable();
+        ((RouterDlg) m_LayerMgr.getLayer("GUI")).arpCacheTable = Tools.getARPCacheTable();
+        ((RouterDlg) m_LayerMgr.getLayer("GUI")).proxyArpTable = Tools.getProxyARPTable();
         m_LayerMgr.addLayer(new NILayer("NI_L"));
         m_LayerMgr.addLayer(new EthernetLayer("EtherNet_L"));
         m_LayerMgr.addLayer(new IPLayer("IP_L"));
