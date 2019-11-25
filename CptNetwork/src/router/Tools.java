@@ -3,9 +3,9 @@ package router;
 import javax.swing.*;
 
 public class Tools {
-    private static final RoutingTable routingTable = new RoutingTable();
-    private static final ARPCacheTable arpCacheTable = new ARPCacheTable();
-    private static final ProxyARPTable proxyArpTable = new ProxyARPTable();
+    private static final RoutingTable routingTable = RoutingTable.getInstance();
+    private static final ARPCacheTable arpCacheTable = ARPCacheTable.getInstance();
+    private static final ProxyARPTable proxyArpTable = ProxyARPTable.getInstance();
     private static RouterDlg guiLayer;
 
     public static void setGUILayer(RouterDlg guiLayer) {
