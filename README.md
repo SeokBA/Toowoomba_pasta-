@@ -41,4 +41,4 @@
       * ARP와 Ping만을 받을 수 있도록 EthernetLayer 업데이트  
       * 양쪽 interface로 Gratuitous ARP를 보낼 수 있도록 btnGARPSend 수정
 ## - 2019.11.27
-  - 최수민 : IPLayer Receive 
+  - 최수민 : IPLayer Receive 수정
