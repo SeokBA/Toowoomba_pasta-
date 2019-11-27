@@ -1,5 +1,7 @@
 package router;
 
+import config.ReadConfig;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -7,6 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,8 +24,11 @@ public class RouterDlg extends JFrame implements BaseLayer {
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
     public ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
     BaseLayer UnderLayer;
+    private boolean isReadInterface0 = false;
+    private boolean isReadInterface1 = false;
+    private boolean isReadStaticRouterTable = false;
 
-    private Tools tools = new Tools();
+    private static Tools tools;
 
     private RoutingTable routingTable;
     private ARPCacheTable arpCacheTable;
@@ -91,17 +97,69 @@ public class RouterDlg extends JFrame implements BaseLayer {
         m_LayerMgr.addLayer(new EthernetLayer("EtherNet_L"));
         m_LayerMgr.addLayer(new IPLayer("IP_L"));
         m_LayerMgr.addLayer(new ARPLayer("ARP_L"));
-
         m_LayerMgr.addLayer(new NILayer("NI_R"));
         m_LayerMgr.addLayer(new EthernetLayer("EtherNet_R"));
         m_LayerMgr.addLayer(new IPLayer("IP_R"));
         m_LayerMgr.addLayer(new ARPLayer("ARP_R"));
-
         m_LayerMgr.connectLayers("GUI ( +NI_L ( *EtherNet_L ( *IP_L ( *GUI ) ) *EtherNet_L ( *ARP_L ( *GUI ) *ARP_L ( *IP_L ) ) ) +NI_R ( *EtherNet_R ( *IP_R ( *GUI ) ) *EtherNet_R ( *ARP_R ( *GUI ) *ARP_R ( *IP_R ) ) ) )");
+
+        ArrayList staticRouterTableConfig, proxyArpTableConfig;
+        if (ReadConfig.config.interface0 != null) {
+            String ipAddressStr = (String) ((LinkedHashMap) ((ArrayList) ReadConfig.config.interface0).get(0)).get("ipAddress");
+            String macAddressStr = (String) ((LinkedHashMap) ((ArrayList) ReadConfig.config.interface0).get(0)).get("macAddress");
+            ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_L")).setEnetSrcAddress(tools.hwAddrStringToByte(macAddressStr));
+            ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcHWAddress(tools.hwAddrStringToByte(macAddressStr));
+            ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcPTAddress(tools.ipAddrStringToByte(ipAddressStr));
+            ((IPLayer) m_LayerMgr.getLayer("IP_L")).setSrcAddress(tools.ipAddrStringToByte(ipAddressStr));
+
+            ((RouterDlg) m_LayerMgr.getLayer("GUI")).lbInterface_0IP.setText("Interface_0 IP      : " + ipAddressStr);
+            ((RouterDlg) m_LayerMgr.getLayer("GUI")).lbInterface_0MAC.setText("Interface_0 MAC : " + macAddressStr);
+            ((RouterDlg) m_LayerMgr.getLayer("GUI")).isReadInterface0=true;
+        }
+        if (ReadConfig.config.interface1 != null) {
+            String ipAddressStr = (String) ((LinkedHashMap) ((ArrayList) ReadConfig.config.interface1).get(0)).get("ipAddress");
+            String macAddressStr = (String) ((LinkedHashMap) ((ArrayList) ReadConfig.config.interface1).get(0)).get("macAddress");
+            ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_R")).setEnetSrcAddress(tools.hwAddrStringToByte(macAddressStr));
+            ((ARPLayer) m_LayerMgr.getLayer("ARP_R")).setSrcHWAddress(tools.hwAddrStringToByte(macAddressStr));
+            ((ARPLayer) m_LayerMgr.getLayer("ARP_R")).setSrcPTAddress(tools.ipAddrStringToByte(ipAddressStr));
+            ((IPLayer) m_LayerMgr.getLayer("IP_R")).setSrcAddress(tools.ipAddrStringToByte(ipAddressStr));
+
+            ((RouterDlg) m_LayerMgr.getLayer("GUI")).lbInterface_1IP.setText("Interface_1 IP      : " + ipAddressStr);
+            ((RouterDlg) m_LayerMgr.getLayer("GUI")).lbInterface_1MAC.setText("Interface_2 MAC : " + macAddressStr);
+            ((RouterDlg) m_LayerMgr.getLayer("GUI")).isReadInterface1=true;
+        }
+        if (ReadConfig.config.staticRouterTable != null) {
+            staticRouterTableConfig= (ArrayList) ReadConfig.config.staticRouterTable;
+            String destination, netmask, gateway, flag;
+            int int3rface, metric;
+            for(int i=0; i<staticRouterTableConfig.size(); i++){
+                destination=((LinkedHashMap)staticRouterTableConfig.get(i)).get("destination").toString();
+                netmask=((LinkedHashMap)staticRouterTableConfig.get(i)).get("netmask").toString();
+                gateway=(String)((LinkedHashMap)staticRouterTableConfig.get(i)).get("gateway");
+                flag=((LinkedHashMap)staticRouterTableConfig.get(i)).get("flag").toString();
+                int3rface=Integer.parseInt(((LinkedHashMap)staticRouterTableConfig.get(i)).get("interface").toString());
+                metric=Integer.parseInt(((LinkedHashMap)staticRouterTableConfig.get(i)).get("metric").toString());
+                ((RouterDlg) m_LayerMgr.getLayer("GUI")).routingTable.getTable().add(new RoutingRecord(destination, netmask, gateway, flag, int3rface, metric));
+            }
+            tools.updateRoutingTable();
+        }
+        if (ReadConfig.config.proxyArpTable!=null){
+            int device;
+            String ipAddress, macAddress;
+            proxyArpTableConfig= (ArrayList) ReadConfig.config.proxyArpTable;
+            for(int i=0; i<proxyArpTableConfig.size(); i++){
+                device=Integer.parseInt(((LinkedHashMap)proxyArpTableConfig.get(i)).get("device").toString());
+                ipAddress=((LinkedHashMap)proxyArpTableConfig.get(i)).get("ipAddress").toString();
+                macAddress=((LinkedHashMap)proxyArpTableConfig.get(i)).get("macAddress").toString();
+                ((RouterDlg) m_LayerMgr.getLayer("GUI")).proxyArpTable.getTable().put(ipAddress, new ProxyARPRecord(ipAddress, macAddress, device));
+            }
+            tools.updateProxyTable();
+        }
     }
 
     public RouterDlg(String pName) {
         pLayerName = pName;
+        tools = new Tools();
 
         // main
         setTitle("TestRouting");
@@ -441,24 +499,26 @@ public class RouterDlg extends JFrame implements BaseLayer {
                     }
                     if (!handChk) {
                         selected0 = selected;
-                        //((NILayer) m_LayerMgr.getLayer("NI_L")).setAdapterNumber(selected);
-                        ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_L")).setEnetSrcAddress(tools.hwAddrStringToByte(macAddressStr));
-                        ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcHWAddress(tools.hwAddrStringToByte(macAddressStr));
-                        ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcPTAddress(tools.ipAddrStringToByte(ipAddressStr));
-                        ((IPLayer) m_LayerMgr.getLayer("IP_L")).setSrcAddress(tools.ipAddrStringToByte(ipAddressStr));
-
-                        lbInterface_0IP.setText("Interface_0 IP      : " + ipAddressStr);
-                        lbInterface_0MAC.setText("Interface_0 MAC : " + macAddressStr);
+                        if(!isReadInterface0){
+                            System.out.println("test");
+                            ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_L")).setEnetSrcAddress(tools.hwAddrStringToByte(macAddressStr));
+                            ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcHWAddress(tools.hwAddrStringToByte(macAddressStr));
+                            ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcPTAddress(tools.ipAddrStringToByte(ipAddressStr));
+                            ((IPLayer) m_LayerMgr.getLayer("IP_L")).setSrcAddress(tools.ipAddrStringToByte(ipAddressStr));
+                            lbInterface_0IP.setText("Interface_0 IP      : " + ipAddressStr);
+                            lbInterface_0MAC.setText("Interface_0 MAC : " + macAddressStr);
+                        }
                     } else {
                         selected1 = selected;
-                        //((NILayer) m_LayerMgr.getLayer("NI_R")).setAdapterNumber(selected);
-                        ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_R")).setEnetSrcAddress(tools.hwAddrStringToByte(macAddressStr));
-                        ((ARPLayer) m_LayerMgr.getLayer("ARP_R")).setSrcHWAddress(tools.hwAddrStringToByte(macAddressStr));
-                        ((ARPLayer) m_LayerMgr.getLayer("ARP_R")).setSrcPTAddress(tools.ipAddrStringToByte(ipAddressStr));
-                        ((IPLayer) m_LayerMgr.getLayer("IP_R")).setSrcAddress(tools.ipAddrStringToByte(ipAddressStr));
-
-                        lbInterface_1IP.setText("Interface_1 IP      : " + ipAddressStr);
-                        lbInterface_1MAC.setText("Interface_2 MAC : " + macAddressStr);
+                        if(!isReadInterface1) {
+                            System.out.println("test");
+                            ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_R")).setEnetSrcAddress(tools.hwAddrStringToByte(macAddressStr));
+                            ((ARPLayer) m_LayerMgr.getLayer("ARP_R")).setSrcHWAddress(tools.hwAddrStringToByte(macAddressStr));
+                            ((ARPLayer) m_LayerMgr.getLayer("ARP_R")).setSrcPTAddress(tools.ipAddrStringToByte(ipAddressStr));
+                            ((IPLayer) m_LayerMgr.getLayer("IP_R")).setSrcAddress(tools.ipAddrStringToByte(ipAddressStr));
+                            lbInterface_1IP.setText("Interface_1 IP      : " + ipAddressStr);
+                            lbInterface_1MAC.setText("Interface_2 MAC : " + macAddressStr);
+                        }
                     }
                     setVisible(false);
                 }

@@ -44,7 +44,10 @@ class RoutingRecord {
     public RoutingRecord(String dstAddr, String netmask, String gateway, String flag, int interfaceNum, int metric) {
         this.dstAddr = tools.ipAddrStringToByte(dstAddr);
         this.netmask = tools.ipAddrStringToByte(netmask);
-        this.gateway = tools.ipAddrStringToByte(gateway);
+        if(gateway.equals("*"))
+            this.gateway= new byte[]{-1, -1, -1, -1};
+        else
+            this.gateway = tools.ipAddrStringToByte(gateway);
         this.metric = metric;
         this.flag = tools.setFlag(flag);
         this.interfaceNum = interfaceNum;

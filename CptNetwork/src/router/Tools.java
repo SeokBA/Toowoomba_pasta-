@@ -78,7 +78,17 @@ public class Tools {
         return intToByte2(toInt);
     }
 
+    public boolean isGateway(byte[] addr){
+        for(int i=0; i<addr.length; i++){
+            if(addr[i]!=-1)
+                return false;
+        }
+        return true;
+    }
+
     public String ipAddrByteToString(byte[] addr) { // pt 포함
+        if(isGateway(addr))
+            return "*";
         StringBuilder sb = new StringBuilder();
         int temp;
         for (int j = 0; j < addr.length; j++) {

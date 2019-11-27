@@ -1,0 +1,32 @@
+# 불필요하거나 값이 없을 경우 - 아래 내용만 날리고
+# interface0: interface1: staticRouterTable: proxyArpTable: 부분은 남겨주시기 바랍니다.
+
+interface0:
+  - ipAddress: 192.168.1.1
+    macAddress: AA:AA:AA:AA:AA:AA
+
+interface1:
+  - ipAddress: 192.168.2.1
+    macAddress: BB:BB:BB:BB:BB:BB
+
+staticRouterTable:
+  - destination: 192.168.2.0
+    netmask: 255.255.255.0
+    gateway: "*"
+    flag: U
+    interface: 0
+    metric: 1
+  - destination: 192.168.3.0
+    netmask: 255.255.255.0
+    gateway: "*"
+    flag: U
+    interface: 0
+    metric: 1
+
+proxyArpTable:
+  - device: 0
+    ipAddress: 111.111.111.111
+    macAddress: CC:CC:CC:CC:CC:CC
+  - device: 1
+    ipAddress: 121.111.111.111
+    macAddress: CD:CC:CC:CC:CC:CC
