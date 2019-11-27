@@ -48,4 +48,6 @@
   - 최수민 :  
       * Ping 전송을 구현하기 위해 IPLayer, EthernetLayer 수정
   - 김종운 : 
-      * yaml을 이용한 program setting 기능 추가
+      * yaml을 이용한 program setting 기능 추가  
+      
+===================== Ping 전송 성공 =====================
