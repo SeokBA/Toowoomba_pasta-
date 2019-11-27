@@ -89,7 +89,7 @@ public class IPLayer implements BaseLayer{
                 e.printStackTrace();
             }
             setDstAddress(dstIPByte);
-        // 입력받은 값이 mac형식일때, 즉 gARP 사용할 때는 여기서 설정해줄 것이 없음
+            // 입력받은 값이 mac형식일때, 즉 gARP 사용할 때는 여기서 설정해줄 것이 없음
         }
         // srcAddress는 GUI에서 세팅
         byte[] c= objToByte(ipHeader, input, length);
@@ -123,15 +123,29 @@ public class IPLayer implements BaseLayer{
 
     public synchronized boolean receive(byte[] input) {
         // 자기가 보낸 패킷이거나, 목적지가 내가 아니면 버림
-        /*if(isItMyPacket(input)||(!isTargetMe(input)))
-            return false;
-        byte[] data = tools.removeCappHeader(input, input.length,19);
-        this.getUpperLayer(0).receive(data);
-        return true;*/
+//        if(isItMyPacket(input)||(!isTargetMe(input)))
+//            return false;
+        byte[] data = tools.removeHeader(input, input.length,20);
+//        this.getUpperLayer(0).receive(data);
+        if(this.getLayerName() == "IP_L"){
+            ((RouterDlg)this.getUpperLayer(0)).getUnderLayer(2).send(input,input.length);
+        }
+        else{
+            ((RouterDlg)this.getUpperLayer(0)).getUnderLayer(0).send(input,input.length);
+        }
+        return true;
         // ~ 1차 과제
 
         //findRoutingRecord(input);
-        return false;
+//        return false;
+    }
+
+    public byte[] getPingDstAddr(byte[] input){
+        byte[] dstaddr = new byte[4];
+        for (int i=0;i<4;i++){
+            dstaddr[i] = input[i+16];
+        }
+        return dstaddr;
     }
 
     //subnetMask와 &연산
