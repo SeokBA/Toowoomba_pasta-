@@ -8,5 +8,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jnetpcap" level="project" />
+    <orderEntry type="library" name="lib" level="project" />
+    <orderEntry type="library" name="yamlbeans-1.13" level="project" />
   </component>
 </module>
