@@ -9,7 +9,7 @@ public class EthernetLayer implements BaseLayer {
     private BaseLayer p_UnderLayer = null;
     private ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
     private ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
-    Tools tools;
+    Tools tools = new Tools();
 
     public EthernetLayer(String pName) {
         pLayerName = pName;
@@ -81,7 +81,13 @@ public class EthernetLayer implements BaseLayer {
             setType(tools.hexToByte2(806));
             setDstAddress(dstAddr);
         } else { // message
-            setType(tools.hexToByte2(0));
+            setType(tools.hexToByte2(800));
+            try {
+                byte[] pingDstAddress = tools.stringHWaddrToByte(Tools.getARPCacheTable().getTable().get(tools.bytePTAddrToString(dstAddr)).hwAddr);
+                setDstAddress(pingDstAddress);
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+            }
         }
         for (int i = 0; i < 6; i++) // Receiver
             buf[i] = Header.enet_dstaddr.addr[i];
@@ -101,8 +107,6 @@ public class EthernetLayer implements BaseLayer {
     }
 
     public synchronized boolean receive(byte[] input) {
-//        System.out.println(Arrays.toString(input));
-        // 자기가 보낸 패킷, 브로드캐스트가 아니면서 내가 타겟이 아니면 false
         if (isMyPacket(input) || (!isBroadCast(input) && !isTargetMe(input) && isTargetRoutingTable(input)))
             return false;
         byte[] data = tools.removeHeader(input, input.length, 14);
@@ -123,7 +127,7 @@ public class EthernetLayer implements BaseLayer {
 
     public boolean isTargetRoutingTable(byte[] input) {
         RoutingTable routingTable = Tools.getRoutingTable();
-        for(RoutingRecord t:routingTable.getTable()){
+        for (RoutingRecord t : routingTable.getTable()) {
             byte[] routingAddr = t.getDstAddr();
             boolean chk = true;
             for (int i = 0; i < 6; i++) {
