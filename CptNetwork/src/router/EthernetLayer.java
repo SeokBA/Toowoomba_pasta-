@@ -82,6 +82,7 @@ public class EthernetLayer implements BaseLayer {
             setDstAddress(dstAddr);
         } else { // message
             setType(tools.hexToByte2(800));
+            setDstAddress(dstAddr);
             try {
                 byte[] pingDstAddress = tools.stringHWaddrToByte(Tools.getARPCacheTable().getTable().get(tools.bytePTAddrToString(dstAddr)).hwAddr);
                 setDstAddress(pingDstAddress);

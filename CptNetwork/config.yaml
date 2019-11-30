@@ -2,25 +2,37 @@
 # interface0: interface1: staticRouterTable: proxyArpTable: 부분은 남겨주시기 바랍니다.
 
 interface0:
-  - ipAddress: 192.168.1.1
-    macAddress: AA:AA:AA:AA:AA:AA
+  - ipAddress: 192.168.3.1
+    macAddress: 00:E0:4F:69:F5:7E
 
 interface1:
-  - ipAddress: 192.168.2.1
-    macAddress: BB:BB:BB:BB:BB:BB
+  - ipAddress: 192.168.1.1
+    macAddress: 84:00:2D:2B:C8:4C
 
 staticRouterTable:
-  - destination: 192.168.2.0
+  - destination: 192.168.1.0
     netmask: 255.255.255.0
     gateway: "*"
     flag: U
-    interface: 0
+    interface: 1
     metric: 1
   - destination: 192.168.3.0
     netmask: 255.255.255.0
     gateway: "*"
     flag: U
     interface: 0
+    metric: 1
+  - destination: 192.168.2.0
+    netmask: 255.255.255.0
+    gateway: 192.168.1.2
+    flag: UG
+    interface: 1
+    metric: 1
+  - destination: 0.0.0.0
+    netmask: 0.0.0.0
+    gateway: 192.168.1.1
+    flag: UG
+    interface: 1
     metric: 1
 
 proxyArpTable:

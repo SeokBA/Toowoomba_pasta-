@@ -26,4 +26,7 @@ interface BaseLayer {
 	default boolean receive() {
 		return false;
 	}
+	default boolean send(byte[] input, int length, RoutingRecord findRecord) {
+		return false;
+	}
 }

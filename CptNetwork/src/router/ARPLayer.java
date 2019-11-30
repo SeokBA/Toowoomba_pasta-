@@ -227,14 +227,17 @@ public class ARPLayer implements BaseLayer {
                 send(input, input.length, (byte) 2, srcHWaddrStr);
             else if (isTarget(input)) // 내 맥주소를 알려줄께!
                 send(input, input.length, (byte) 2);
+            	
 
         } else if (input[7] == 2) { // reply도착했을 때
             String dstPTAddrStr = tools.bytePTAddrToString(getDstPTAddress());
             byte[] srcHWAddr = tools.extractSelectPart(input, 8, 14);
             String srcHWAddrStr = tools.byteHWAddrToString(srcHWAddr);
+            byte[] srcPTAddr=tools.extractSelectPart(input, 14,18);
             cacheTable.put(dstPTAddrStr, new ARPCacheRecord(dstPTAddrStr, srcHWAddrStr, "Complete"));
 //            ((ARPDlg) getUpperLayer(0)).updateCacheTable();
             tools.updateARPTable();
+            ((IPLayer) getUpperLayer(1)).notifiedReply(dstPTAddrStr,srcPTAddr);
         }
         return true;
     }

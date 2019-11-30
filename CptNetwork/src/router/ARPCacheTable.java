@@ -17,6 +17,24 @@ public class ARPCacheTable {
     public Map<String, ARPCacheRecord> getTable(){
         return arpCacheTable;
     }
+    
+    public boolean isInArpEntry(String hostIpAddr) {
+        for (Map.Entry<String, ARPCacheRecord> entry : arpCacheTable.entrySet()) {
+            if (entry.getValue().ipAddr.equals(hostIpAddr)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public String getMacAddr(String hostID) {
+        for (Map.Entry<String, ARPCacheRecord> entry : arpCacheTable.entrySet()) {
+            if (entry.getValue().ipAddr.equals(hostID)) {
+                return entry.getValue().hwAddr;
+            }
+        }
+        return null;
+    }
 
     public String[][] getStringArray(){
         String[][] arr = new String[arpCacheTable.size()][];

@@ -9,6 +9,8 @@ public class IPLayer implements BaseLayer {
     private BaseLayer p_UnderLayer = null;
     private ArrayList<BaseLayer> p_aUnderLayer = new ArrayList<>();
     private ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<>();
+    private String targetIP; //내가 요청한 ARP 의 ip 주소
+    private byte[] ICMPbuffer;
     Tools tools = new Tools();
 
     public IPLayer(String pName) {
@@ -68,31 +70,57 @@ public class IPLayer implements BaseLayer {
             ipHeader.ipSrc.addr[i] = addr[i];
         }
     }
-
-    public boolean send(byte[] input, int length) {
-        if (isPing(input)) {
-            byte[] extractDst = tools.extractSelectPart(input, 16, 20);
-            setDstAddress(extractDst);
-            ((EthernetLayer) this.getUnderLayer(0)).Send(input, input.length, 0, ipHeader.ipDst.addr);
+    
+    public byte[] getSrcAddress(){
+    	byte[] srcAddr = new byte[4];
+        for(int i=0; i<srcAddr.length; i++){
+            srcAddr[i]=ipHeader.ipSrc.addr[i];
         }
+        return srcAddr;
+    }
+    
+    public boolean send(byte[] input, int length) {
         byte[] c = objToByte(ipHeader, input, length);
         ((ARPLayer) this.getUnderLayer(1)).send(c, length + 19, (byte) 1);
         return true;
     }
 
-    public boolean isPing(byte[] input) {
-        byte[] data = tools.removeHeader(input, input.length, 20);
-        if (data[0] == 0x08 && data[1] == 0x00) {
-            return true;
-        } else if (data[0] == 0x00 && data[1] == 0x00) {
-            return true;
-        }
-        return false;
-    }
 
+	public boolean send(byte[] input, int length, RoutingRecord findRecord) {
+        ICMPbuffer = input;
+		byte[] dstaddr = tools.extractSelectPart(input, 16, 20);
+		if (findRecord.getFlag().equals("U")) { // 직접 연결이 되어있으면
+		    targetIP=tools.ipAddrByteToString(dstaddr);
+			if (getMacAddrArpRecord(targetIP) != null) { // 직접연결되어있고 테이블에 있으면
+				((EthernetLayer) this.getUnderLayer(0)).Send(ICMPbuffer, ICMPbuffer.length, 0, dstaddr);
+			} else {
+				send(targetIP.getBytes(), targetIP.getBytes().length);// 연결이 되어있고 테이블에 없으면 ARP request
+			}
+		}
 
-    public byte[] objToByte(_IP_HEADER Header, byte[] input, int length) {
-        byte[] buf = new byte[length + 19];
+		else if (findRecord.getFlag().equals("UG")) {
+			// 직접연결이 아닌 게이트웨이로 전달해야되는 경우
+            String targetGateWay = tools.ipAddrByteToString(findRecord.getGateway());
+			String macAddrStr = getMacAddrArpRecord(targetGateWay);
+			if (macAddrStr != null) { // mac주소가 있으면 바로 보냄 받은 ICMP에 ethernet에서 주소만 바꿔서 보냄.
+				((EthernetLayer) this.getUnderLayer(0)).Send(ICMPbuffer, ICMPbuffer.length, 0, findRecord.getGateway());
+			} else {
+				send(targetGateWay.getBytes(), targetGateWay.getBytes().length);// arp테이블에 주소가 없으면 request
+			}
+		}
+		return false;
+	}
+
+ 	//ARPCacheTable에 mac주소 찾기
+	public String getMacAddrArpRecord(String targetIP) {
+		if (Tools.getARPCacheTable().isInArpEntry(targetIP)) {
+			return Tools.getARPCacheTable().getMacAddr(targetIP);
+		}
+		return null;
+	}
+
+	public byte[] objToByte(_IP_HEADER Header, byte[] input, int length) {
+		byte[] buf = new byte[length + 19];
         buf[0] = Header.ipVerLen;
         buf[1] = Header.ipTos;
         for (int i = 2; i < 4; i++)
@@ -112,17 +140,60 @@ public class IPLayer implements BaseLayer {
             buf[19 + i] = input[i];
         return buf;
     }
+	
+	public boolean dstIsMe(byte[] dstaddr, byte[] input) {
+		byte[] src = getSrcAddress();
+		for (int i = 0; i < 4; i++) {
+			if (dstaddr[i] != src[i])
+				return false;
+		}
+		return true;
+	}
 
-    public synchronized boolean receive(byte[] input) {
-        if (input.length == 60) {
-            if (this.getLayerName() == "IP_L") {
-                (this.getUpperLayer(0)).getUnderLayer(2).send(input, input.length);
-            } else {
-                (this.getUpperLayer(0)).getUnderLayer(0).send(input, input.length);
-            }
-        }
-        return true;
+	public synchronized boolean receive(byte[] input) {
+    	byte[] dstaddr = tools.extractSelectPart(input, 16, 20);
+    	if(dstIsMe(dstaddr,input))
+    		return true;
+    	
+    	if(findRoutingRecord(dstaddr) != null) {//라우팅테이블에서  맞는 gateway가져오고
+	    	RoutingRecord findRecord = findRoutingRecord(dstaddr);
+//	    	String targetGateWay = tools.bytePTAddrToString(findRecord.getGateway()); //라우팅에서 찾은 Gateway
+	    	//라우팅테이블에 맞는 인터페이스에게 데이터 전달.
+	    	if(findRecord.getInterfaceNum() != 0) {
+	    		 (this.getUpperLayer(0)).getUnderLayer(2).send(input, input.length, findRecord);
+	    	}else {
+	    		 (this.getUpperLayer(0)).getUnderLayer(0).send(input, input.length, findRecord);
+	    	}
+	    	return true;
+    	}
+    	return false;
     }
+	
+	 //subnetMask와 &연산
+    public RoutingRecord findRoutingRecord(byte[] input) {
+    	RoutingTable routingtable = RoutingTable.getInstance();
+    	for(RoutingRecord element : routingtable.getTable()) {
+            boolean findflag = true;
+    		byte[] subNetmask = element.getNetmask();
+    		byte[] dstAddr = element.getDstAddr();
+    		for(int i =0; i<4; i++) {
+    			if(dstAddr[i] != (input[i]&subNetmask[i])) {
+    				findflag = false;
+    			}
+    		}
+    		if(findflag) {
+    			return element;
+    		}
+    	}
+    	return null;
+    }
+	
+    public void notifiedReply(String ipAddrStr, byte[] PTAddr) {//gateway에 대한 요청 arp가 reply가 오면 mac주소 바꿔서 send
+    	if(targetIP!=null && targetIP.equals(ipAddrStr)) {
+    		 ((EthernetLayer)this.getUnderLayer(0)).Send(ICMPbuffer,ICMPbuffer.length,0,PTAddr);
+    		 targetIP = null;
+    	}
+	}
 
     @Override
     public String getLayerName() {

@@ -34,7 +34,7 @@ public class NILayer implements BaseLayer{
 	private void packetStartDriver() {
 		int snaplen=64*1024;
 		int flags=Pcap.MODE_PROMISCUOUS;
-		int timeout=3*1000; // 10*1000;
+		int timeout=500; // 10*1000;
 		m_AdapterObject=Pcap.openLive(m_pAdapterList.get(m_iNumAdapter).getName(), snaplen, flags, timeout, errbuf);
 	}
 	public void setAdapterNumber(int iNum) {
@@ -143,7 +143,7 @@ class Receive_Thread implements Runnable {
 				data=packet.getByteArray(0, packet.size());
 				upperLayer.receive(data);
 			};
-        	adapterObject.loop(100000, jpacketHandler, "");
+        	adapterObject.loop(-1, jpacketHandler, "");
         }
     }
 }

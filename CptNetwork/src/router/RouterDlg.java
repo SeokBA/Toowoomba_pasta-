@@ -85,7 +85,7 @@ public class RouterDlg extends JFrame implements BaseLayer {
     PopupRoutingAdderDlg popupRoutingAdderDlg;
     PopupProxyAdderDlg popupProxyAdderDlg;
 
-    int selected0 = -1, selected1 = -1;
+    int selected0 = 1, selected1 = 0;
 
     public static void main(String[] args) {
         m_LayerMgr.addLayer(new RouterDlg("GUI"));
@@ -492,13 +492,14 @@ public class RouterDlg extends JFrame implements BaseLayer {
                 if (e.getSource() == btnOK) { // Pushed "OK" button
                     selected = addInterfaceComboBox.getSelectedIndex();
                     if (!handChk) {
-                        ipAddressStr = tools.ipAddrByteToString(m_NILayer.getIpAddress(selected));
-                        try {
-                            macAddressStr = tools.hwAddrByteToString(m_NILayer.getMacAddress(selected), ':');
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
-                        }
+                        selected0 = selected;
                         if(!isReadInterface0){
+                            ipAddressStr = tools.ipAddrByteToString(m_NILayer.getIpAddress(selected));
+                            try {
+                                macAddressStr = tools.hwAddrByteToString(m_NILayer.getMacAddress(selected), ':');
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
                             System.out.println("test");
                             ((EthernetLayer) m_LayerMgr.getLayer("EtherNet_L")).setEnetSrcAddress(tools.hwAddrStringToByte(macAddressStr));
                             ((ARPLayer) m_LayerMgr.getLayer("ARP_L")).setSrcHWAddress(tools.hwAddrStringToByte(macAddressStr));
