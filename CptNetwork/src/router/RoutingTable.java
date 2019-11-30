@@ -29,6 +29,33 @@ public class RoutingTable {
         }
         return arr;
     }
+    
+    public void sortTable() {
+    	int bitCount00 = 0;
+    	int bitCount01 = 0;
+    	
+    	for(int i=0; i<routingTable.size()-1; i++) {
+    		for(int j=0; j<routingTable.get(i).getNetmask().length; j++) {
+    			bitCount00 += Integer.bitCount(routingTable.get(i).getNetmask()[j]);
+    			bitCount01 += Integer.bitCount(routingTable.get(i+1).getNetmask()[j]);
+    		}
+    		if(bitCount00 < bitCount01)
+    			swapElement(i, i+1);
+    		bitCount00 = 0;
+    		bitCount01 = 0;
+    	}
+    }
+    
+    public void swapElement(int i, int j) {
+    	RoutingRecord temp = routingTable.get(i);
+    	routingTable.set(i, routingTable.get(j));
+    	routingTable.set(j, temp);
+    }
+    
+    public int getSize() {
+    	return routingTable.size();
+    }
+    
 }
 
 class RoutingRecord {

@@ -140,6 +140,10 @@ public class RouterDlg extends JFrame implements BaseLayer {
                 int3rface=Integer.parseInt(((LinkedHashMap)staticRouterTableConfig.get(i)).get("interface").toString());
                 metric=Integer.parseInt(((LinkedHashMap)staticRouterTableConfig.get(i)).get("metric").toString());
                 ((RouterDlg) m_LayerMgr.getLayer("GUI")).routingTable.getTable().add(new RoutingRecord(destination, netmask, gateway, flag, int3rface, metric));
+                RoutingTable routingTable = RoutingTable.getInstance();
+                for(int j = 0; j<routingTable.getSize()-1; j++) {
+                	routingTable.sortTable();
+                }
             }
             tools.updateRoutingTable();
         }
@@ -687,6 +691,10 @@ public class RouterDlg extends JFrame implements BaseLayer {
                     int interface_num = addInterfaceComboBox.getSelectedIndex();
                     int metric = 1;
                     routingTable.getTable().add(new RoutingRecord(dstIPAddr, netMask, gateWay, flag, interface_num, metric));
+                    RoutingTable routingTable = RoutingTable.getInstance();
+                    for(int j = 0; j<routingTable.getSize()-1; j++) {
+                    	routingTable.sortTable();
+                    }
                     tools.updateRoutingTable();
                     setVisible(false);
                 }
